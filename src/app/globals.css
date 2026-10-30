@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+/* ===================================================
+   UTHUM NALINDA — ARCHITECTURAL SKETCH CORRIDOR (FPV)
+   Style: Hand-Drawn Architectural Draft / Ink on Paper
+   =================================================== */
+
+:root {
+  --sketch-paper: #fbf9f4;
+  --sketch-paper-darker: #f3f0e8;
+  --sketch-ink: #1a1c1e;
+  --sketch-ink-muted: #5e646e;
+  --sketch-line: #2e3238;
+  --sketch-line-light: rgba(30, 34, 40, 0.15);
+  --sketch-accent: #c2410c; /* Drafting burnt orange / technical ink */
+  --sketch-surface: #ffffff;
+  --sketch-border: #dcd7cc;
+}
+
+[data-theme="dark"] {
+  --sketch-paper: #121316;
+  --sketch-paper-darker: #0c0d0f;
+  --sketch-ink: #f0f2f5;
+  --sketch-ink-muted: #9aa0a6;
+  --sketch-line: #d0d5dd;
+  --sketch-line-light: rgba(255, 255, 255, 0.15);
+  --sketch-accent: #f97316;
+  --sketch-surface: #191b20;
+  --sketch-border: #2c3038;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  background: var(--sketch-paper);
+  color: var(--sketch-ink);
+  font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+  height: 100%;
+  width: 100%;
+}
+
+.font-display {
+  font-family: 'Syne', 'Space Grotesk', sans-serif !important;
+  letter-spacing: -0.02em;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace !important;
+}
+
+/* ============================================
+   ARCHITECTURAL DRAFT PAPER TEXTURE & GRID
+   ============================================ */
+
+.sketch-canvas {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--sketch-paper);
+  background-size: 30px 30px;
+  background-image: 
+    linear-gradient(to right, var(--sketch-line-light) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--sketch-line-light) 1px, transparent 1px);
+}
+
+/* Technical Ink Border */
+.sketch-border {
+  border: 1.5px solid var(--sketch-line);
+  box-shadow: 3px 3px 0px rgba(26, 28, 30, 0.1);
+}
+
+/* Architectural Card */
+.sketch-panel {
+  background: var(--sketch-surface);
+  border: 1.5px solid var(--sketch-border);
+  box-shadow: 4px 4px 0px var(--sketch-border);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--sketch-line);
+}
