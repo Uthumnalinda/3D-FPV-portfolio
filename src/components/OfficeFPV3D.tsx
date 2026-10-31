@@ -435,8 +435,8 @@ export default function OfficeFPV3D() {
     // 1. Scene
     const scene = new THREE.Scene();
     sceneRef.current = scene;
-    scene.background = new THREE.Color("#fbf9f4");
-    scene.fog = new THREE.FogExp2("#fbf9f4", 0.035);
+    scene.background = new THREE.Color("#ede8de");
+    scene.fog = new THREE.FogExp2("#ede8de", 0.022);
 
     // 2. Camera
     const camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 50);
@@ -452,17 +452,17 @@ export default function OfficeFPV3D() {
     renderer.shadowMap.type = THREE.PCFShadowMap;
     container.appendChild(renderer.domElement);
 
-    // 4. Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.95);
+    // 4. Lighting - Balanced for High-Contrast Architectural Form
+    const ambientLight = new THREE.AmbientLight(0xfff8ed, 0.65);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xfff9ef, 0.5);
-    dirLight.position.set(2, 6, 2);
+    const dirLight = new THREE.DirectionalLight(0xffedd5, 0.75);
+    dirLight.position.set(3, 7, 2);
     scene.add(dirLight);
 
     // Overhead corridor strip lights
     for (let z = 2; z >= -19; z -= 3.5) {
-      const pointLight = new THREE.PointLight(0xffedd5, 0.45, 6);
+      const pointLight = new THREE.PointLight(0xfff1dc, 0.45, 6.5);
       pointLight.position.set(0, 2.9, z);
       scene.add(pointLight);
     }
@@ -578,44 +578,44 @@ export default function OfficeFPV3D() {
 
     const frostedTexture = createFrostedGlassTexture();
 
-    // Materials
+    // Materials - Executive Matte Black & Architectural Bronze Suite
     const wallMaterial = new THREE.MeshStandardMaterial({
-      color: 0xfcfbfa,
-      roughness: 0.9,
+      color: 0xeee8de, // Warm architectural limestone off-white
+      roughness: 0.85,
     });
     const floorMaterial = new THREE.MeshStandardMaterial({
       map: createTravertineFloorTexture(),
-      roughness: 0.26, // Polished travertine sheen
-      metalness: 0.08,
+      roughness: 0.22, // Polished travertine high-specular sheen
+      metalness: 0.1,
     });
     const ceilingMaterial = new THREE.MeshStandardMaterial({
-      color: 0xfaf9f6,
-      roughness: 0.9,
+      color: 0xf7f7f5, // Clean matte architectural ceiling
+      roughness: 0.95,
     });
     // Full-height Transparent Glass with Frosted Horizontal Manifestation
     const glassMaterial = new THREE.MeshStandardMaterial({
       map: frostedTexture,
       transparent: true,
-      opacity: 0.78,
-      roughness: 0.06,
-      metalness: 0.12,
+      opacity: 0.82,
+      roughness: 0.05,
+      metalness: 0.15,
       depthWrite: false, // Ensures interior furniture and wall posters render cleanly behind glass
     });
-    // Brushed Satin Aluminum clamping tracks (clean architectural metal, NOT black bars)
+    // Anodized Matte Black / Dark Charcoal Clamping Channels & Baseboards
     const aluminumTrackMaterial = new THREE.MeshStandardMaterial({
-      color: 0xc8d0d8,
-      metalness: 0.85,
-      roughness: 0.22,
-    });
-    // Dark structural accent columns (bronze / marble cladding)
-    const columnMaterial = new THREE.MeshStandardMaterial({
-      color: 0x322d28,
+      color: 0x1f2124, // Crisp Matte Black / Dark Bronze framing
+      metalness: 0.55,
       roughness: 0.35,
-      metalness: 0.2,
     });
-    // Polished Chrome / Stainless Steel for handles, pivot fittings & legs
+    // Rich Architectural Dark Bronze / Marbled Graphite Structural Columns
+    const columnMaterial = new THREE.MeshStandardMaterial({
+      color: 0x221f1d,
+      roughness: 0.3,
+      metalness: 0.4,
+    });
+    // Polished Stainless Steel / Chrome for handles & fittings
     const chromeMaterial = new THREE.MeshStandardMaterial({
-      color: 0xe8ecf0,
+      color: 0xe2e7ed,
       metalness: 0.95,
       roughness: 0.1,
     });
@@ -639,12 +639,26 @@ export default function OfficeFPV3D() {
 
     const corridorHeight = 3.2;
 
-    // Helper: Solid Wall Segment (Back exhibition walls & boundary dividers)
+    // Helper: Solid Wall Segment with Dark Bronze Skirting Baseboard
     const buildWall = (x: number, y: number, z: number, w: number, h: number, d: number) => {
       const geo = new THREE.BoxGeometry(w, h, d);
       const mesh = new THREE.Mesh(geo, wallMaterial);
       mesh.position.set(x, y, z);
       scene.add(mesh);
+
+      // Architectural Baseboard / Skirting to cleanly ground the wall
+      const isZAxis = d > w;
+      const skirtH = 0.08;
+      const skirtThick = (isZAxis ? w : d) + 0.015;
+      const skirtGeo = new THREE.BoxGeometry(
+        isZAxis ? skirtThick : w,
+        skirtH,
+        isZAxis ? d : skirtThick
+      );
+      const skirt = new THREE.Mesh(skirtGeo, aluminumTrackMaterial);
+      skirt.position.set(x, skirtH / 2, z);
+      scene.add(skirt);
+
       return mesh;
     };
 
@@ -1133,28 +1147,28 @@ export default function OfficeFPV3D() {
 
       doorHinge.add(handleGroup);
 
-      // Minimalist Frosted Glass Door Plaque at Eye Level
+      // Matte Architectural Dark Bronze Door Plaque with Burnt Orange Accent
       const pCanvas = document.createElement("canvas");
       pCanvas.width = 512;
       pCanvas.height = 128;
       const pCtx = pCanvas.getContext("2d")!;
-      pCtx.fillStyle = "rgba(255, 255, 255, 0.9)";
+      pCtx.fillStyle = "#1c1917";
       pCtx.fillRect(0, 0, 512, 128);
-      pCtx.strokeStyle = "rgba(160, 170, 180, 0.45)";
-      pCtx.lineWidth = 3;
+      pCtx.strokeStyle = "#c2410c";
+      pCtx.lineWidth = 4;
       pCtx.strokeRect(4, 4, 504, 120);
 
-      pCtx.fillStyle = "#1a1c1e";
-      pCtx.font = "bold 30px 'Space Grotesk', sans-serif";
+      pCtx.fillStyle = "#f5f5f4";
+      pCtx.font = "bold 28px 'Space Grotesk', sans-serif";
       pCtx.fillText(plaqueText, 24, 52);
 
-      pCtx.fillStyle = "#c2410c";
+      pCtx.fillStyle = "#ea580c";
       pCtx.font = "bold 20px 'JetBrains Mono', monospace";
       pCtx.fillText(subText, 24, 95);
 
       const pTex = new THREE.CanvasTexture(pCanvas);
       const pGeo = new THREE.PlaneGeometry(0.65, 0.16);
-      const pMat = new THREE.MeshBasicMaterial({ map: pTex, transparent: true });
+      const pMat = new THREE.MeshBasicMaterial({ map: pTex });
       const plaqueMesh = new THREE.Mesh(pGeo, pMat);
       plaqueMesh.position.set(doorW / 2, doorH * 0.74, doorThick / 2 + 0.005);
       doorHinge.add(plaqueMesh);
