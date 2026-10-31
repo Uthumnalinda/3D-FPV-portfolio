@@ -109,6 +109,8 @@ export default function OfficeFPV3D() {
   const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
   const nfcLedMeshRef = useRef<THREE.Mesh | null>(null);
   const nfcReaderPos3D = useRef(new THREE.Vector3(0.74, 1.35, 0.08));
+  const shelfPos3D = useRef(new THREE.Vector3(-0.72, 0.94, 1.45));
+  const [shelfScreenPos, setShelfScreenPos] = useState<{ x: number; y: number } | null>(null);
   const projectedPosRef = useRef<{ x: number; y: number } | null>(null);
 
   // References for Three.js state
