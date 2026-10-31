@@ -109,7 +109,7 @@ export default function OfficeFPV3D() {
   const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
   const nfcLedMeshRef = useRef<THREE.Mesh | null>(null);
   const nfcReaderPos3D = useRef(new THREE.Vector3(0.74, 1.35, 0.08));
-  const shelfPos3D = useRef(new THREE.Vector3(-0.72, 0.94, 1.45));
+  const shelfPos3D = useRef(new THREE.Vector3(-0.95, 0.90, 0.75));
   const [shelfScreenPos, setShelfScreenPos] = useState<{ x: number; y: number } | null>(null);
   const projectedPosRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -1243,20 +1243,20 @@ export default function OfficeFPV3D() {
     standColumn.position.y = 0.425;
     standGroup.add(standColumn);
 
-    // Dark limestone tray shelf top
+    // Dark limestone tray shelf top (Reception surface)
     const standTop = new THREE.Mesh(
-      new THREE.BoxGeometry(0.32, 0.03, 0.26),
-      new THREE.MeshStandardMaterial({ color: 0x2d2a26, roughness: 0.4, metalness: 0.2 })
+      new THREE.BoxGeometry(0.42, 0.04, 0.32),
+      new THREE.MeshStandardMaterial({ color: 0x221f1d, roughness: 0.4, metalness: 0.2 })
     );
-    standTop.position.y = 0.865;
+    standTop.position.y = 0.87;
     standGroup.add(standTop);
 
-    // Subtle small acrylic badge tray on top of the shelf
+    // Dedicated keycard tray on top of the shelf
     const badgeTray = new THREE.Mesh(
-      new THREE.BoxGeometry(0.18, 0.008, 0.14),
-      new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2, metalness: 0.1 })
+      new THREE.BoxGeometry(0.24, 0.012, 0.18),
+      new THREE.MeshStandardMaterial({ color: 0x141210, roughness: 0.2, metalness: 0.3 })
     );
-    badgeTray.position.y = 0.884;
+    badgeTray.position.y = 0.896;
     standGroup.add(badgeTray);
 
     scene.add(standGroup);
@@ -1944,6 +1944,11 @@ export default function OfficeFPV3D() {
         }
       });
 
+      // Keep stand & reader projection synchronized with camera when in lobby
+      if (currentCamPos.current.z > 0.8) {
+        updateProjections();
+      }
+
       renderer.render(scene, camera);
     };
 
@@ -1952,19 +1957,23 @@ export default function OfficeFPV3D() {
       const sv = nfcReaderPos3D.current.clone();
       sv.project(camera);
       if (sv.z < 1) {
-        const sx = (sv.x * 0.5 + 0.5) * window.innerWidth;
-        const sy = (-(sv.y * 0.5) + 0.5) * window.innerHeight;
+        const sx = Math.round((sv.x * 0.5 + 0.5) * window.innerWidth);
+        const sy = Math.round((-(sv.y * 0.5) + 0.5) * window.innerHeight);
         projectedPosRef.current = { x: sx, y: sy };
-        setProjectedNfcTarget({ x: sx, y: sy });
       }
 
-      // 2. 3D Visitor Stand resting shelf projection
+      // 2. 3D Visitor Stand resting shelf projection (Anchors the keycard to the table)
       const cv = shelfPos3D.current.clone();
       cv.project(camera);
       if (cv.z < 1) {
-        const cx = (cv.x * 0.5 + 0.5) * window.innerWidth;
-        const cy = (-(cv.y * 0.5) + 0.5) * window.innerHeight;
-        setShelfScreenPos({ x: cx, y: cy });
+        const cx = Math.round((cv.x * 0.5 + 0.5) * window.innerWidth);
+        const cy = Math.round((-(cv.y * 0.5) + 0.5) * window.innerHeight);
+        setShelfScreenPos((prev) => {
+          if (!prev || Math.abs(prev.x - cx) > 1 || Math.abs(prev.y - cy) > 1) {
+            return { x: cx, y: cy };
+          }
+          return prev;
+        });
       }
     };
     updateProjections();
@@ -2413,12 +2422,17 @@ export default function OfficeFPV3D() {
         <div
           ref={cardRef}
           style={{
-            transform: `translate(${cardOffset.x}px, ${cardOffset.y}px) ${
-              isDraggingCard ? "rotate(4deg) scale(1.08)" : "rotate(-1deg)"
+            left: shelfScreenPos ? `${shelfScreenPos.x}px` : "22%",
+            top: shelfScreenPos ? `${shelfScreenPos.y + 14}px` : "79%",
+            transform: `translate(calc(-50% + ${cardOffset.x}px), calc(-50% + ${cardOffset.y}px)) ${
+              isDraggingCard
+                ? "rotate(4deg) scale(1.1)"
+                : "perspective(500px) rotateX(52deg) rotateZ(-3deg)"
             }`,
+            transformOrigin: "center center",
           }}
-          className={`fixed bottom-24 left-6 sm:left-12 z-40 transition-transform ${
-            isDraggingCard ? "cursor-grabbing duration-0 drop-shadow-2xl" : "cursor-grab duration-300 hover:scale-105"
+          className={`fixed z-40 transition-transform ${
+            isDraggingCard ? "cursor-grabbing duration-0 drop-shadow-2xl" : "cursor-grab duration-300 hover:rotate-x-[36deg] hover:scale-105"
           } select-none touch-none`}
           onMouseDown={handleDragStart}
           onTouchStart={handleDragStart}
@@ -2430,7 +2444,11 @@ export default function OfficeFPV3D() {
         >
           {/* Authentic Physical Corporate Plastic RFID Visitor Badge */}
           <div
-            className={`w-36 h-22 rounded-md border text-stone-900 p-2 relative shadow-md select-none transition-colors ${
+            className={`w-28 h-18 rounded border text-stone-900 p-1.5 relative select-none transition-all ${
+              isDraggingCard
+                ? "shadow-2xl"
+                : "shadow-[0_8px_14px_-2px_rgba(0,0,0,0.7),0_2px_4px_rgba(0,0,0,0.4)]"
+            } ${
               nfcAccessGranted
                 ? "bg-emerald-100 border-emerald-600 shadow-emerald-500/50"
                 : cardHintDenied
@@ -2439,41 +2457,41 @@ export default function OfficeFPV3D() {
             }`}
           >
             {/* Lanyard Clip Slot */}
-            <div className="w-6 h-1 mx-auto bg-stone-300 border border-stone-400 rounded-full mb-1" />
+            <div className="w-5 h-0.5 mx-auto bg-stone-300 border border-stone-400 rounded-full mb-1" />
 
             {/* Header: VISITOR PASS */}
-            <div className="flex items-center justify-between border-b border-stone-300 pb-1">
-              <span className="font-sans font-black text-[9px] tracking-widest text-stone-900 uppercase">
+            <div className="flex items-center justify-between border-b border-stone-300 pb-0.5">
+              <span className="font-sans font-black text-[7.5px] tracking-wider text-stone-900 uppercase">
                 VISITOR PASS
               </span>
-              <span className="font-mono text-[7px] font-bold text-orange-700">
+              <span className="font-mono text-[6px] font-bold text-orange-700">
                 LEVEL 01
               </span>
             </div>
 
             {/* Middle Badge Details */}
-            <div className="my-1 flex items-center justify-between">
+            <div className="my-0.5 flex items-center justify-between">
               <div>
-                <div className="font-mono text-[7px] font-semibold text-stone-500 uppercase tracking-tight">
+                <div className="font-mono text-[6px] font-semibold text-stone-600 uppercase tracking-tight leading-none">
                   TEMPORARY GUEST
                 </div>
-                <div className="font-mono text-[6.5px] text-stone-400">
+                <div className="font-mono text-[5.5px] text-stone-400 leading-none mt-0.5">
                   UN-LABS // ACCESS
                 </div>
               </div>
-              <div className="font-mono text-[8px] font-bold text-stone-700 flex items-center gap-0.5">
+              <div className="font-mono text-[7px] font-bold text-stone-700 flex items-center">
                 <span>)))</span>
               </div>
             </div>
 
             {/* Realistic Barcode with Serial Number */}
-            <div className="mt-1 pt-1 border-t border-stone-200 flex items-end justify-between">
-              <div className="flex gap-[1.5px] items-end h-2.5">
-                {[2, 1, 3, 1, 1, 2, 1, 3, 2, 1, 2, 1, 3, 1].map((w, i) => (
+            <div className="mt-0.5 pt-0.5 border-t border-stone-200 flex items-end justify-between">
+              <div className="flex gap-[1px] items-end h-2">
+                {[2, 1, 2, 1, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1].map((w, i) => (
                   <div key={i} style={{ width: `${w}px` }} className="bg-stone-900 h-full" />
                 ))}
               </div>
-              <span className="font-mono text-[6px] text-stone-600 font-bold tracking-tight">
+              <span className="font-mono text-[5.5px] text-stone-600 font-bold tracking-tight">
                 #VIS-8492
               </span>
             </div>
