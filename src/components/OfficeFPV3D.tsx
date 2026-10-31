@@ -383,23 +383,6 @@ export default function OfficeFPV3D() {
   // Denial Feedback when clicking instead of dragging or clicking locked links
   const showDeniedHint = useCallback(() => {
     setCardHintDenied(true);
-    // Electronic access denied low beep
-    try {
-      const audioCtx = new (window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(190, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.18);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.18);
-    } catch {
-      // Audio policy fallback
-    }
     setTimeout(() => setCardHintDenied(false), 2400);
   }, []);
 
@@ -452,25 +435,6 @@ export default function OfficeFPV3D() {
       // Switch 3D reader LED to emerald green
       if (nfcLedMeshRef.current) {
         (nfcLedMeshRef.current.material as THREE.MeshBasicMaterial).color.setHex(0x10b981);
-      }
-
-      // High-tech security badge authentication chime via Web Audio API
-      try {
-        const audioCtx = new (window.AudioContext ||
-          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.12);
-        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.2);
-      } catch {
-        // Fallback if browser audio policy blocks initial sound
       }
 
       // Smoothly unlock and walk through
