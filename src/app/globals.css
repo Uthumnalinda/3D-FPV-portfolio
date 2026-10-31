@@ -51,6 +51,10 @@ html, body {
   font-family: 'JetBrains Mono', monospace !important;
 }
 
+.font-scratchy {
+  font-family: 'Rock Salt', 'Covered By Your Grace', cursive, sans-serif !important;
+}
+
 /* ============================================
    ARCHITECTURAL DRAFT PAPER TEXTURE & GRID
    ============================================ */
