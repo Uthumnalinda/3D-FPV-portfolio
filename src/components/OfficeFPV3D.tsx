@@ -2066,11 +2066,11 @@ export default function OfficeFPV3D() {
          ============================================================ */}
       <header className="absolute top-0 inset-x-0 z-40 px-6 py-4 flex items-center justify-between border-b-2 border-stone-800 bg-[#fbf9f4]/90 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <span className="w-3 h-3 border-2 border-stone-800 bg-orange-600 rotate-45" />
-          <span className="font-display font-extrabold text-sm sm:text-base tracking-wider text-stone-900">
+          <span className="w-3.5 h-3.5 border-2 border-stone-800 bg-orange-600 rotate-45 shrink-0" />
+          <span className="font-display font-black text-base sm:text-lg tracking-normal text-stone-900 inline-block scale-y-125 origin-left">
             UTHUM NALINDA
           </span>
-          <span className="text-[10px] font-mono text-stone-600 hidden sm:inline">
+          <span className="text-[10px] font-mono text-stone-600 hidden sm:inline ml-1">
             // 3D FPV ARCHITECTURAL WALKTHROUGH
           </span>
         </div>
