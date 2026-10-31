@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import CinematicIntro from "@/components/CinematicIntro";
 
@@ -12,12 +12,12 @@ export default function Home() {
   const [introFinished, setIntroFinished] = useState(false);
   const [introFading, setIntroFading] = useState(false);
 
-  const handleIntroComplete = () => {
+  const handleIntroComplete = useCallback(() => {
     setIntroFading(true);
     setTimeout(() => {
       setIntroFinished(true);
     }, 700); // 700ms smooth cinematic crossfade
-  };
+  }, []);
 
   return (
     <main className="w-full min-h-screen relative overflow-hidden bg-[#fbf9f4]">
