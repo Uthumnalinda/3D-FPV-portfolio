@@ -133,8 +133,15 @@ export default function OfficeFPV3D() {
     pauseUntil: number;
   } | null>(null);
 
-  // Clickable interactive meshes
-  const clickablesRef = useRef<{ mesh: THREE.Object3D; action: () => void }[]>([]);
+  // Clickable interactive meshes with strict room location guards
+  const clickablesRef = useRef<{
+    mesh: THREE.Object3D;
+    action: () => void;
+    allowedLocations?: LocationState[];
+  }[]>([]);
+  const wallsRef = useRef<THREE.Mesh[]>([]);
+  const locationRef = useRef<LocationState>(location);
+  locationRef.current = location;
 
   // Door pivot groups & rotation states
   const doorsRef = useRef<{ [key: string]: { group: THREE.Group; baseY: number } }>({});
@@ -891,6 +898,7 @@ export default function OfficeFPV3D() {
       const mesh = new THREE.Mesh(geo, customMaterial || wallMaterial);
       mesh.position.set(x, y, z);
       scene.add(mesh);
+      wallsRef.current.push(mesh);
 
       // Architectural Baseboard / Skirting to cleanly ground the wall
       const isZAxis = d > w;
@@ -948,6 +956,7 @@ export default function OfficeFPV3D() {
       glassMesh.position.set(x, channelThick + glassH / 2, z);
       glassMesh.renderOrder = 10;
       scene.add(glassMesh);
+      wallsRef.current.push(glassMesh);
 
       return glassMesh;
     };
@@ -960,6 +969,7 @@ export default function OfficeFPV3D() {
       );
       col.position.set(x, corridorHeight / 2, z);
       scene.add(col);
+      wallsRef.current.push(col);
       return col;
     };
 
@@ -1323,10 +1333,11 @@ export default function OfficeFPV3D() {
 
     scene.add(nfcGroup);
 
-    // Clicking terminal in 3D prompts the user to drag the card
+    // Clicking terminal in 3D prompts the user to drag the card (Lobby exclusive)
     clickablesRef.current.push({
       mesh: nfcFace,
       action: () => actionsRef.current.showDeniedHint(),
+      allowedLocations: ["LOBBY"],
     });
 
     // --- B. CENTRAL CORRIDOR GLASS PARTITION WALLS (x = -1.2 and x = 1.2) ---
@@ -1515,7 +1526,19 @@ export default function OfficeFPV3D() {
       scene.add(doorHinge);
       doorsRef.current[nameKey] = { group: doorHinge, baseY: baseRotationY };
 
-      clickablesRef.current.push({ mesh: leaf, action: onClickDoor });
+      const doorLocs: { [key: string]: LocationState[] } = {
+        entrance: ["LOBBY", "CORRIDOR_1"],
+        door1: ["CORRIDOR_1", "INSIDE_1"],
+        door2: ["CORRIDOR_2", "INSIDE_2"],
+        door3: ["CORRIDOR_3", "INSIDE_3"],
+        door4: ["CORRIDOR_4", "INSIDE_4"],
+      };
+
+      clickablesRef.current.push({
+        mesh: leaf,
+        action: onClickDoor,
+        allowedLocations: doorLocs[nameKey] || ["CORRIDOR_1"],
+      });
     };
 
     // 1. Entrance Door (Hinged at left jamb x = -0.57, z = 0, baseY = 0)
@@ -1611,6 +1634,7 @@ export default function OfficeFPV3D() {
       clickablesRef.current.push({
         mesh,
         action: () => setActiveModal("about"),
+        allowedLocations: ["INSIDE_1"],
       });
 
       const spot = new THREE.SpotLight(0xfffaee, 1.4, 7, Math.PI / 3, 0.5);
@@ -1690,6 +1714,7 @@ export default function OfficeFPV3D() {
         clickablesRef.current.push({
           mesh,
           action: () => setActiveModal(`project_${idx}` as ModalType),
+          allowedLocations: ["INSIDE_2"],
         });
       });
 
@@ -1761,6 +1786,7 @@ export default function OfficeFPV3D() {
       clickablesRef.current.push({
         mesh,
         action: () => setActiveModal("stack"),
+        allowedLocations: ["INSIDE_3"],
       });
 
       const spot = new THREE.SpotLight(0xfffaee, 1.4, 7, Math.PI / 3, 0.5);
@@ -1813,6 +1839,7 @@ export default function OfficeFPV3D() {
       clickablesRef.current.push({
         mesh,
         action: () => setActiveModal("contact"),
+        allowedLocations: ["INSIDE_4"],
       });
 
       const spot = new THREE.SpotLight(0xfffaee, 1.4, 7, Math.PI / 3, 0.5);
@@ -1835,13 +1862,25 @@ export default function OfficeFPV3D() {
 
       raycaster.setFromCamera(mouse, camera);
 
-      const targets = clickablesRef.current.map((c) => c.mesh);
-      const intersects = raycaster.intersectObjects(targets, true);
+      // Only test targets valid for current location, preventing X-ray clicks through lobby/corridor walls
+      const curLoc = locationRef.current;
+      const validClickables = clickablesRef.current.filter((c) => {
+        if (!c.allowedLocations) return true;
+        return c.allowedLocations.includes(curLoc);
+      });
+
+      const targets = validClickables.map((c) => c.mesh);
+      // Include walls to physically block clicks through solid drywall/glass partitions
+      const allMeshesToTest = [...targets, ...wallsRef.current];
+      const intersects = raycaster.intersectObjects(allMeshesToTest, true);
 
       if (intersects.length > 0) {
         let hit = intersects[0].object;
+        // If the closest object hit is a wall or partition, the click is occluded
+        if (wallsRef.current.includes(hit as THREE.Mesh)) return;
+
         while (hit && hit !== scene) {
-          const matched = clickablesRef.current.find((c) => c.mesh === hit);
+          const matched = validClickables.find((c) => c.mesh === hit);
           if (matched) {
             matched.action();
             return;
