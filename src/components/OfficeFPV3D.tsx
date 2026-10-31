@@ -339,13 +339,31 @@ export default function OfficeFPV3D() {
   );
 
   // ==========================================
-  // THREE.JS SCENE CREATION
+  // THREE.JS SCENE CREATION & ACTION DISPATCHER
   // ==========================================
   const actionsRef = useRef({
     navigateTo,
+    enterLabFromLobby: () => navigateTo("CORRIDOR_1"),
+    enterRoom1: () => navigateTo("ROOM_1"),
+    exitRoom1ToCorridor2: () => navigateTo("ROOM_2"),
+    enterRoom2: () => navigateTo("ROOM_2"),
+    exitRoom2ToCorridor3: () => navigateTo("ROOM_3"),
+    enterRoom3: () => navigateTo("ROOM_3"),
+    exitRoom3ToCorridor4: () => navigateTo("ROOM_4"),
+    enterRoom4: () => navigateTo("ROOM_4"),
+    returnToLobby: () => navigateTo("LOBBY"),
   });
   actionsRef.current = {
     navigateTo,
+    enterLabFromLobby: () => navigateTo("CORRIDOR_1"),
+    enterRoom1: () => navigateTo("ROOM_1"),
+    exitRoom1ToCorridor2: () => navigateTo("ROOM_2"),
+    enterRoom2: () => navigateTo("ROOM_2"),
+    exitRoom2ToCorridor3: () => navigateTo("ROOM_3"),
+    enterRoom3: () => navigateTo("ROOM_3"),
+    exitRoom3ToCorridor4: () => navigateTo("ROOM_4"),
+    enterRoom4: () => navigateTo("ROOM_4"),
+    returnToLobby: () => navigateTo("LOBBY"),
   };
 
   useEffect(() => {
@@ -557,14 +575,6 @@ export default function OfficeFPV3D() {
       color: 0x1e2022,
       roughness: 0.7,
     });
-    const plantPotMaterial = new THREE.MeshStandardMaterial({
-      color: 0xf5f5f5,
-      roughness: 0.3,
-    });
-    const leafMaterial = new THREE.MeshStandardMaterial({
-      color: 0x285935,
-      roughness: 0.6,
-    });
 
     const corridorHeight = 3.2;
 
@@ -728,41 +738,6 @@ export default function OfficeFPV3D() {
       }
     };
 
-    // Helper: 3D Office Potted Plant (Ficus / Palm in Modern Planter)
-    const createPottedPlant = (x: number, z: number) => {
-      const plantGroup = new THREE.Group();
-      plantGroup.position.set(x, 0, z);
-
-      // White minimalist cylindrical pot
-      const pot = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.24, 0.18, 0.6, 24),
-        plantPotMaterial
-      );
-      pot.position.y = 0.3;
-      plantGroup.add(pot);
-
-      // Soil
-      const soil = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.22, 0.22, 0.04, 16),
-        new THREE.MeshStandardMaterial({ color: 0x33261d, roughness: 0.9 })
-      );
-      soil.position.y = 0.59;
-      plantGroup.add(soil);
-
-      // Lush green foliage tiers
-      for (let i = 0; i < 4; i++) {
-        const leafTier = new THREE.Mesh(
-          new THREE.ConeGeometry(0.36 - i * 0.05, 0.45, 8),
-          leafMaterial
-        );
-        leafTier.position.y = 0.8 + i * 0.28;
-        leafTier.rotation.y = i * 0.7;
-        plantGroup.add(leafTier);
-      }
-
-      scene.add(plantGroup);
-    };
-
     // Helper: Modern Executive Conference Chair
     const createOfficeChair = (x: number, z: number, rotationY = 0) => {
       const chair = new THREE.Group();
@@ -840,9 +815,6 @@ export default function OfficeFPV3D() {
       createOfficeChair(centerX + 0.75, centerZ - 0.8, -Math.PI / 2);
       createOfficeChair(centerX + 0.75, centerZ, -Math.PI / 2);
       createOfficeChair(centerX + 0.75, centerZ + 0.8, -Math.PI / 2);
-
-      // Potted plant in corner
-      createPottedPlant(centerX + 1.4, centerZ + 1.8);
     };
 
     // Helper: Executive Work Desk with Laptop & Chair
@@ -895,9 +867,6 @@ export default function OfficeFPV3D() {
 
       // Ergonomic desk chair
       createOfficeChair(centerX, centerZ - 0.7, 0);
-
-      // Potted plant
-      createPottedPlant(centerX - 1.2, centerZ + 0.8);
     };
 
     // ==========================================
