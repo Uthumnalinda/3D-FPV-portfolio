@@ -697,10 +697,127 @@ export default function OfficeFPV3D() {
 
     const frostedTexture = createFrostedGlassTexture();
 
+    // Helper: Clean Architectural Honed Limestone Wall Texture with Soft Ambient Gradient
+    const createArchitecturalWallTexture = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext("2d")!;
+
+      // Vertical architectural ambient gradient (Soft lighting falloff from ceiling to floor)
+      const grad = ctx.createLinearGradient(0, 0, 0, 1024);
+      grad.addColorStop(0.0, "#cdc5b7"); // Contact shadow near ceiling
+      grad.addColorStop(0.14, "#e5ded2"); // Soft upper wall transition
+      grad.addColorStop(0.48, "#f2ece2"); // Natural illuminated center / eye level
+      grad.addColorStop(0.84, "#ded6ca"); // Soft lower wall falloff
+      grad.addColorStop(1.0, "#c6beb0"); // Baseboard contact shadow
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      // Fine honed plaster / limestone surface grain for realistic physical texture
+      for (let i = 0; i < 4000; i++) {
+        const x = Math.random() * 1024;
+        const y = Math.random() * 1024;
+        const alpha = 0.015 + Math.random() * 0.025;
+        ctx.fillStyle = Math.random() > 0.5 ? `rgba(255,255,255,${alpha})` : `rgba(45,40,32,${alpha})`;
+        ctx.fillRect(x, y, 1.5, 1.5);
+      }
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      return tex;
+    };
+
+    // Helper: Lobby Front Wall Texture (Bright Warm Architectural Stone with Soft Ambient Falloff)
+    const createLobbyFrontWallTexture = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext("2d")!;
+
+      // Soft architectural ambient gradient: bright warm limestone center, delicate contact shade near ceiling & floor
+      const vGrad = ctx.createLinearGradient(0, 0, 0, 1024);
+      vGrad.addColorStop(0.0, "#d5cdc0");
+      vGrad.addColorStop(0.15, "#ebe4d8");
+      vGrad.addColorStop(0.50, "#f5efe5");
+      vGrad.addColorStop(0.85, "#ebe4d8");
+      vGrad.addColorStop(1.0, "#cfc6b8");
+      ctx.fillStyle = vGrad;
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      // Delicate plaster grain
+      for (let i = 0; i < 3500; i++) {
+        const x = Math.random() * 1024;
+        const y = Math.random() * 1024;
+        const alpha = 0.012 + Math.random() * 0.02;
+        ctx.fillStyle = Math.random() > 0.5 ? `rgba(255,255,255,${alpha})` : `rgba(45,40,32,${alpha})`;
+        ctx.fillRect(x, y, 1.5, 1.5);
+      }
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      return tex;
+    };
+
+    // Helper: Lobby Perpendicular Side Wall Texture (Recessed Greige Shadow Shade with Corner Ambient Occlusion)
+    const createLobbySideWallTexture = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1024;
+      canvas.height = 1024;
+      const ctx = canvas.getContext("2d")!;
+
+      // Base: Shaded architectural greige tone for natural perpendicular plane contrast
+      ctx.fillStyle = "#cec7b9";
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      // Horizontal Ambient Occlusion Corner Gradient (Soft corner shadow where side wall meets front & back walls)
+      const hGrad = ctx.createLinearGradient(0, 0, 1024, 0);
+      hGrad.addColorStop(0.0, "rgba(70, 62, 52, 0.28)");  // Corner ambient shadow
+      hGrad.addColorStop(0.18, "rgba(70, 62, 52, 0.06)"); // Soft falloff into room
+      hGrad.addColorStop(0.50, "rgba(255, 255, 255, 0.08)"); // Subtle ambient room bounce
+      hGrad.addColorStop(0.82, "rgba(70, 62, 52, 0.06)"); // Soft falloff towards back
+      hGrad.addColorStop(1.0, "rgba(70, 62, 52, 0.28)");  // Back corner ambient shadow
+      ctx.fillStyle = hGrad;
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      // Vertical ceiling & baseboard contact shadows
+      const vGrad = ctx.createLinearGradient(0, 0, 0, 1024);
+      vGrad.addColorStop(0.0, "rgba(50, 44, 36, 0.22)");
+      vGrad.addColorStop(0.12, "rgba(50, 44, 36, 0.0)");
+      vGrad.addColorStop(0.88, "rgba(50, 44, 36, 0.0)");
+      vGrad.addColorStop(1.0, "rgba(50, 44, 36, 0.22)");
+      ctx.fillStyle = vGrad;
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      // Fine honed stone grain
+      for (let i = 0; i < 4000; i++) {
+        const x = Math.random() * 1024;
+        const y = Math.random() * 1024;
+        const alpha = 0.015 + Math.random() * 0.025;
+        ctx.fillStyle = Math.random() > 0.5 ? `rgba(255,255,255,${alpha})` : `rgba(45,40,32,${alpha})`;
+        ctx.fillRect(x, y, 1.5, 1.5);
+      }
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      return tex;
+    };
+
     // Materials - Executive Matte Black & Architectural Bronze Suite
     const wallMaterial = new THREE.MeshStandardMaterial({
-      color: 0xeee8de, // Warm architectural limestone off-white
+      map: createArchitecturalWallTexture(),
       roughness: 0.85,
+    });
+    const lobbyFrontWallMaterial = new THREE.MeshStandardMaterial({
+      map: createLobbyFrontWallTexture(),
+      roughness: 0.88,
+    });
+    const lobbySideWallMaterial = new THREE.MeshStandardMaterial({
+      map: createLobbySideWallTexture(),
+      roughness: 0.88,
     });
     const floorMaterial = new THREE.MeshStandardMaterial({
       map: createTravertineFloorTexture(),
@@ -751,9 +868,17 @@ export default function OfficeFPV3D() {
     const corridorHeight = 3.2;
 
     // Helper: Solid Wall Segment with Dark Bronze Skirting Baseboard
-    const buildWall = (x: number, y: number, z: number, w: number, h: number, d: number) => {
+    const buildWall = (
+      x: number,
+      y: number,
+      z: number,
+      w: number,
+      h: number,
+      d: number,
+      customMaterial?: THREE.Material
+    ) => {
       const geo = new THREE.BoxGeometry(w, h, d);
-      const mesh = new THREE.Mesh(geo, wallMaterial);
+      const mesh = new THREE.Mesh(geo, customMaterial || wallMaterial);
       mesh.position.set(x, y, z);
       scene.add(mesh);
 
@@ -1064,20 +1189,67 @@ export default function OfficeFPV3D() {
     });
 
     // --- A. ENTRANCE LOBBY ENCLOSURE (z = 0 to z = 4.5) ---
-    // Clean solid entrance wall separating lobby from corridor (prevents optical clutter)
+    // Clean solid entrance wall separating lobby from corridor (Warm architectural limestone tone)
     buildGlassDoorFrame(0, 0, "z", 1.2, 2.3);
-    buildWall(-4.6, corridorHeight / 2, 0, 8.0, corridorHeight, 0.14);
-    buildWall(4.6, corridorHeight / 2, 0, 8.0, corridorHeight, 0.14);
+    buildWall(-4.6, corridorHeight / 2, 0, 8.0, corridorHeight, 0.14, lobbyFrontWallMaterial);
+    buildWall(4.6, corridorHeight / 2, 0, 8.0, corridorHeight, 0.14, lobbyFrontWallMaterial);
 
-    // Lobby side and back architectural walls
-    buildWall(-1.8, corridorHeight / 2, 2.25, 0.14, corridorHeight, 4.5);
-    buildWall(1.8, corridorHeight / 2, 2.25, 0.14, corridorHeight, 4.5);
-    buildWall(0, corridorHeight / 2, 4.5, 3.6, corridorHeight, 0.14);
+    // Lobby side and back architectural walls (Perpendicular planes with corner ambient occlusion & shadow depth)
+    buildWall(-1.8, corridorHeight / 2, 2.25, 0.14, corridorHeight, 4.5, lobbySideWallMaterial);
+    buildWall(1.8, corridorHeight / 2, 2.25, 0.14, corridorHeight, 4.5, lobbySideWallMaterial);
+    buildWall(0, corridorHeight / 2, 4.5, 3.6, corridorHeight, 0.14, lobbySideWallMaterial);
 
     // Overhead lobby fixture
     const lobbyLight = new THREE.PointLight(0xffedd5, 0.6, 6);
     lobbyLight.position.set(0, 2.9, 2.2);
     scene.add(lobbyLight);
+
+    // Architectural Wall-Grazing Downlights (Casts realistic lighting gradients & corner depth)
+    const leftWallWash = new THREE.SpotLight(0xffebd2, 1.3, 5.5, Math.PI / 4, 0.65);
+    leftWallWash.position.set(-1.2, 3.1, 1.4);
+    const leftTarget = new THREE.Object3D();
+    leftTarget.position.set(-1.8, 1.0, 0.6);
+    scene.add(leftTarget);
+    leftWallWash.target = leftTarget;
+    scene.add(leftWallWash);
+
+    const rightWallWash = new THREE.SpotLight(0xffebd2, 1.3, 5.5, Math.PI / 4, 0.65);
+    rightWallWash.position.set(1.2, 3.1, 1.4);
+    const rightTarget = new THREE.Object3D();
+    rightTarget.position.set(1.8, 1.0, 0.6);
+    scene.add(rightTarget);
+    rightWallWash.target = rightTarget;
+    scene.add(rightWallWash);
+
+    // 3D Minimalist Visitor Console Stand (Pedestal shelf on the left at x = -0.95, y = 0.42, z = 0.75)
+    const standGroup = new THREE.Group();
+    standGroup.position.set(-0.95, 0, 0.75);
+
+    // Matte dark graphite pedestal column
+    const standColumn = new THREE.Mesh(
+      new THREE.BoxGeometry(0.24, 0.85, 0.20),
+      new THREE.MeshStandardMaterial({ color: 0x1c1a18, roughness: 0.5, metalness: 0.3 })
+    );
+    standColumn.position.y = 0.425;
+    standGroup.add(standColumn);
+
+    // Dark limestone tray shelf top
+    const standTop = new THREE.Mesh(
+      new THREE.BoxGeometry(0.32, 0.03, 0.26),
+      new THREE.MeshStandardMaterial({ color: 0x2d2a26, roughness: 0.4, metalness: 0.2 })
+    );
+    standTop.position.y = 0.865;
+    standGroup.add(standTop);
+
+    // Subtle small acrylic badge tray on top of the shelf
+    const badgeTray = new THREE.Mesh(
+      new THREE.BoxGeometry(0.18, 0.008, 0.14),
+      new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.2, metalness: 0.1 })
+    );
+    badgeTray.position.y = 0.884;
+    standGroup.add(badgeTray);
+
+    scene.add(standGroup);
 
     // 3D NFC RFID Keycard Wall Terminal (Right of entrance door at x = 0.74, y = 1.35, z = 0.08)
     const nfcGroup = new THREE.Group();
@@ -1765,17 +1937,27 @@ export default function OfficeFPV3D() {
       renderer.render(scene, camera);
     };
 
-    const updateNfcProjection = () => {
-      const v = nfcReaderPos3D.current.clone();
-      v.project(camera);
-      if (v.z < 1) {
-        const sx = (v.x * 0.5 + 0.5) * window.innerWidth;
-        const sy = (-(v.y * 0.5) + 0.5) * window.innerHeight;
+    const updateProjections = () => {
+      // 1. 3D NFC Wall Reader projection
+      const sv = nfcReaderPos3D.current.clone();
+      sv.project(camera);
+      if (sv.z < 1) {
+        const sx = (sv.x * 0.5 + 0.5) * window.innerWidth;
+        const sy = (-(sv.y * 0.5) + 0.5) * window.innerHeight;
         projectedPosRef.current = { x: sx, y: sy };
         setProjectedNfcTarget({ x: sx, y: sy });
       }
+
+      // 2. 3D Visitor Stand resting shelf projection
+      const cv = shelfPos3D.current.clone();
+      cv.project(camera);
+      if (cv.z < 1) {
+        const cx = (cv.x * 0.5 + 0.5) * window.innerWidth;
+        const cy = (-(cv.y * 0.5) + 0.5) * window.innerHeight;
+        setShelfScreenPos({ x: cx, y: cy });
+      }
     };
-    updateNfcProjection();
+    updateProjections();
 
     animate();
 
@@ -1786,7 +1968,7 @@ export default function OfficeFPV3D() {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
-      updateNfcProjection();
+      updateProjections();
     };
 
     window.addEventListener("resize", handleResize);
@@ -1908,7 +2090,7 @@ export default function OfficeFPV3D() {
               {isWalking
                 ? "Moving through hallway..."
                 : location === "LOBBY"
-                ? "Standing outside entrance. Click the door or 'OPEN DOOR & WALK IN'"
+                ? "Standing in entrance lobby. Drag the visitor pass from the stand to the scanner to enter."
                 : location === "CORRIDOR_1"
                 ? "Outside Room 01 (About Me). Click door to open & enter"
                 : location === "INSIDE_1"
@@ -2225,39 +2407,21 @@ export default function OfficeFPV3D() {
         </div>
       )}
 
-      {/* ============================================================
-          LOBBY EXCLUSIVE: 3D NFC SCANNER DROP TARGET INDICATOR
-         ============================================================ */}
-      {location === "LOBBY" && !isWalking && projectedNfcTarget && !nfcAccessGranted && (
-        <div
-          style={{
-            left: `${projectedNfcTarget.x}px`,
-            top: `${projectedNfcTarget.y}px`,
-            transform: "translate(-50%, -50%)",
-          }}
-          className="fixed pointer-events-none z-30 flex flex-col items-center"
-        >
-          <div className="w-16 h-16 rounded-full border-2 border-orange-500/70 bg-orange-500/10 animate-ping absolute" />
-          <div className="w-10 h-10 rounded-full border-2 border-orange-500 bg-stone-900/90 flex items-center justify-center shadow-lg">
-            <span className="text-[9px] font-mono text-orange-400 font-bold">NFC</span>
-          </div>
-          <span className="mt-2 text-[9px] font-mono font-bold px-2 py-0.5 bg-stone-900/90 text-orange-300 border border-orange-500/50 rounded shadow whitespace-nowrap">
-            DROP CARD HERE ↘
-          </span>
-        </div>
-      )}
 
       {/* ============================================================
-          LOBBY EXCLUSIVE: DRAGGABLE SECURITY ACCESS BADGE
+          LOBBY EXCLUSIVE: REALISTIC DISCOVERABLE GUEST VISITOR PASS
+          (Rests on the Reception Stand in the lower-left lobby)
          ============================================================ */}
       {location === "LOBBY" && !isWalking && (
         <div
           ref={cardRef}
           style={{
-            transform: `translate(${cardOffset.x}px, ${cardOffset.y}px)`,
+            transform: `translate(${cardOffset.x}px, ${cardOffset.y}px) ${
+              isDraggingCard ? "rotate(4deg) scale(1.08)" : "rotate(-1deg)"
+            }`,
           }}
-          className={`fixed bottom-24 right-4 sm:right-10 z-40 transition-transform ${
-            isDraggingCard ? "cursor-grabbing scale-105 duration-0" : "cursor-grab duration-300 hover:scale-102"
+          className={`fixed bottom-24 left-6 sm:left-12 z-40 transition-transform ${
+            isDraggingCard ? "cursor-grabbing duration-0 drop-shadow-2xl" : "cursor-grab duration-300 hover:scale-105"
           } select-none touch-none`}
           onMouseDown={handleDragStart}
           onTouchStart={handleDragStart}
@@ -2267,85 +2431,53 @@ export default function OfficeFPV3D() {
             }
           }}
         >
-          {/* Acrylic Glass Access Card */}
+          {/* Authentic Physical Corporate Plastic RFID Visitor Badge */}
           <div
-            className={`w-72 sm:w-80 rounded-2xl border-2 transition-all p-4 shadow-2xl relative overflow-hidden backdrop-blur-md ${
+            className={`w-36 h-22 rounded-md border text-stone-900 p-2 relative shadow-md select-none transition-colors ${
               nfcAccessGranted
-                ? "bg-emerald-950/90 border-emerald-500 shadow-emerald-500/40"
+                ? "bg-emerald-100 border-emerald-600 shadow-emerald-500/50"
                 : cardHintDenied
-                ? "bg-rose-950/90 border-rose-500 shadow-rose-500/40 animate-bounce"
-                : "bg-stone-900/90 border-orange-500 shadow-orange-500/20"
+                ? "bg-rose-100 border-rose-600 animate-bounce"
+                : "bg-[#fcfbf9] border-stone-300 hover:border-stone-500"
             }`}
           >
-            {/* Lanyard Slot */}
-            <div className="w-12 h-1.5 mx-auto mb-3 bg-stone-700/80 rounded-full" />
+            {/* Lanyard Clip Slot */}
+            <div className="w-6 h-1 mx-auto bg-stone-300 border border-stone-400 rounded-full mb-1" />
 
-            {/* Card Header & Chip */}
-            <div className="flex items-center justify-between border-b border-stone-800 pb-2.5">
-              <div className="flex items-center gap-2">
-                <span
-                  className={`w-2.5 h-2.5 rounded-full ${
-                    nfcAccessGranted ? "bg-emerald-400 animate-pulse" : "bg-orange-500"
-                  }`}
-                />
-                <span className="font-mono text-[11px] font-bold tracking-wider text-stone-200">
-                  SECURITY CREDENTIAL
-                </span>
-              </div>
-              <span className="font-mono text-[10px] px-2 py-0.5 rounded border border-orange-500/60 text-orange-400 bg-orange-500/10 font-bold">
+            {/* Header: VISITOR PASS */}
+            <div className="flex items-center justify-between border-b border-stone-300 pb-1">
+              <span className="font-sans font-black text-[9px] tracking-widest text-stone-900 uppercase">
+                VISITOR PASS
+              </span>
+              <span className="font-mono text-[7px] font-bold text-orange-700">
                 LEVEL 01
               </span>
             </div>
 
-            {/* Smart Chip & NFC Symbol */}
-            <div className="flex items-center justify-between my-3">
-              <div className="w-9 h-7 rounded border border-amber-600/80 bg-gradient-to-br from-amber-400/30 to-amber-600/10 flex flex-col justify-around p-1">
-                <div className="w-full h-0.5 bg-amber-400/40" />
-                <div className="w-full h-0.5 bg-amber-400/40" />
+            {/* Middle Badge Details */}
+            <div className="my-1 flex items-center justify-between">
+              <div>
+                <div className="font-mono text-[7px] font-semibold text-stone-500 uppercase tracking-tight">
+                  TEMPORARY GUEST
+                </div>
+                <div className="font-mono text-[6.5px] text-stone-400">
+                  UN-LABS // ACCESS
+                </div>
               </div>
-              <div className="font-mono text-[11px] text-stone-400 font-semibold tracking-widest flex items-center gap-1.5">
-                <span>RFID // NFC</span>
-                <span className="text-orange-400 font-bold">((( • )))</span>
-              </div>
-            </div>
-
-            {/* Holder Information */}
-            <div className="space-y-0.5">
-              <div className="font-display font-extrabold text-stone-100 text-lg tracking-wide">
-                UTHUM NALINDA
-              </div>
-              <div className="font-mono text-[11px] font-bold text-orange-400 uppercase">
-                Software & Security Lab
+              <div className="font-mono text-[8px] font-bold text-stone-700 flex items-center gap-0.5">
+                <span>)))</span>
               </div>
             </div>
 
-            {/* Interactive Status Footer */}
-            <div
-              className={`mt-3.5 pt-2 border-t font-mono text-[10px] font-bold flex items-center justify-between ${
-                nfcAccessGranted
-                  ? "border-emerald-700 text-emerald-300"
-                  : "border-stone-800 text-stone-400"
-              }`}
-            >
-              <span>
-                {nfcAccessGranted
-                  ? "✓ ACCESS GRANTED"
-                  : cardHintDenied
-                  ? "⚠️ MUST DRAG & DROP ONTO SCANNER!"
-                  : isDraggingCard
-                  ? "RELEASE ON SCANNER TO UNLOCK"
-                  : "DRAG & DROP TO WALL SCANNER"}
-              </span>
-              <span
-                className={`font-bold ${
-                  nfcAccessGranted
-                    ? "text-emerald-400"
-                    : cardHintDenied
-                    ? "text-rose-400"
-                    : "text-orange-400"
-                }`}
-              >
-                {nfcAccessGranted ? "UNLOCKED" : cardHintDenied ? "DENIED" : "DRAG ↗"}
+            {/* Realistic Barcode with Serial Number */}
+            <div className="mt-1 pt-1 border-t border-stone-200 flex items-end justify-between">
+              <div className="flex gap-[1.5px] items-end h-2.5">
+                {[2, 1, 3, 1, 1, 2, 1, 3, 2, 1, 2, 1, 3, 1].map((w, i) => (
+                  <div key={i} style={{ width: `${w}px` }} className="bg-stone-900 h-full" />
+                ))}
+              </div>
+              <span className="font-mono text-[6px] text-stone-600 font-bold tracking-tight">
+                #VIS-8492
               </span>
             </div>
           </div>
@@ -2412,10 +2544,12 @@ export default function OfficeFPV3D() {
           </div>
           <div className="text-[10px] text-stone-600 mt-0.5">
             {isWalking
-              ? "WALKING THROUGH CORRIDOR..."
+              ? "Door unlocked. Walking inside..."
               : location === "LOBBY"
-              ? "DRAG THE ACCESS BADGE TO THE WALL SCANNER TO UNLOCK"
-              : "CLICK ANY DOOR IN 3D TO ENTER DIRECTLY, OR USE CONTROLS"}
+              ? cardHintDenied
+                ? "The door is locked. Drag and drop your pass onto the scanner to enter."
+                : "Pick up your visitor pass from the stand and scan it at the door."
+              : "Click any door in 3D to enter directly, or use controls below"}
           </div>
         </div>
 
@@ -2434,12 +2568,12 @@ export default function OfficeFPV3D() {
               }`}
             >
               {isWalking
-                ? "WALKING..."
+                ? "Entering Office..."
                 : nfcAccessGranted
-                ? "ACCESS GRANTED..."
+                ? "Access Granted — Welcome"
                 : cardHintDenied
-                ? "⚠️ MUST DRAG & DROP CARD TO ENTER"
-                : "🔒 DOOR LOCKED // DRAG CARD TO SCANNER"}
+                ? "Please drag your pass to the scanner"
+                : "Door Locked — Scan Pass"}
             </button>
           )}
 
