@@ -2131,49 +2131,6 @@ export default function OfficeFPV3D() {
       </header>
 
       {/* ============================================================
-          ON-SCREEN 3D HUD HINT (NO FLOATING MODAL)
-         ============================================================ */}
-      {!activeModal && (
-        <div className="absolute top-20 inset-x-0 z-30 flex justify-center pointer-events-none px-4">
-          <div className="pointer-events-auto bg-[#ffffff]/90 border border-stone-800 px-4 py-2 font-mono text-xs shadow-md flex items-center gap-3">
-            <span className="text-orange-700 font-bold">
-              {isWalking ? "WALKING..." : "● 3D ROOM VIEW:"}
-            </span>
-            <span className="text-stone-700">
-              {isWalking
-                ? "Walking inside..."
-                : location === "LOBBY"
-                ? "Scan your pass to enter."
-                : location === "CORRIDOR_1" || location === "CORRIDOR_2" || location === "CORRIDOR_3" || location === "CORRIDOR_4"
-                ? "Click any door to enter."
-                : location === "INSIDE_1"
-                ? "Click the board to view."
-                : location === "INSIDE_2"
-                ? "Click any project to view."
-                : location === "INSIDE_3"
-                ? "Click wall to view tools."
-                : "Click desk to send a message."}
-            </span>
-
-            {/* In-room Expand Button */}
-            {!isWalking && (location === "INSIDE_1" || location === "INSIDE_2" || location === "INSIDE_3" || location === "INSIDE_4") && (
-              <button
-                onClick={() => {
-                  if (location === "INSIDE_1") setActiveModal("about");
-                  else if (location === "INSIDE_2") setActiveModal("project_0");
-                  else if (location === "INSIDE_3") setActiveModal("stack");
-                  else if (location === "INSIDE_4") setActiveModal("contact");
-                }}
-                className="ml-2 px-2.5 py-1 bg-stone-900 text-stone-100 hover:bg-orange-600 font-bold text-[11px] cursor-pointer"
-              >
-                [ EXPAND DETAILS ↗ ]
-              </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================
           INTERACTIVE MODAL OVERLAYS (ONLY POP UP WHEN CLICKED)
          ============================================================ */}
       {activeModal && (
