@@ -483,37 +483,100 @@ export default function OfficeFPV3D() {
       mesh.add(line);
     };
 
-    // Helper: Procedural floor texture
-    const createFloorTexture = () => {
+    // Helper: Realistic Polished Travertine / Limestone Floor Texture
+    const createTravertineFloorTexture = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = 512;
-      canvas.height = 512;
+      canvas.width = 1024;
+      canvas.height = 1024;
       const ctx = canvas.getContext("2d")!;
-      ctx.fillStyle = "#f3f0e6";
-      ctx.fillRect(0, 0, 512, 512);
 
-      ctx.strokeStyle = "rgba(35, 40, 48, 0.14)";
-      ctx.lineWidth = 2;
-      const step = 64;
-      for (let x = 0; x <= 512; x += step) {
+      // Base warm travertine cream/beige tone
+      ctx.fillStyle = "#ebe5d8";
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      // Subtle natural limestone veining and mottling
+      for (let i = 0; i < 350; i++) {
+        const x = Math.random() * 1024;
+        const y = Math.random() * 1024;
+        const rad = 25 + Math.random() * 80;
+        const grad = ctx.createRadialGradient(x, y, 4, x, y, rad);
+        const shade =
+          Math.random() > 0.5
+            ? "rgba(250, 246, 238, 0.28)"
+            : "rgba(218, 208, 192, 0.22)";
+        grad.addColorStop(0, shade);
+        grad.addColorStop(1, "rgba(235, 229, 216, 0)");
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(x, y, rad, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Large corporate polished floor tile grout lines (256px step = ~1m x 1m tiles)
+      ctx.strokeStyle = "rgba(145, 135, 120, 0.38)";
+      ctx.lineWidth = 3;
+      const step = 256;
+      for (let x = 0; x <= 1024; x += step) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, 512);
+        ctx.lineTo(x, 1024);
         ctx.stroke();
       }
-      for (let y = 0; y <= 512; y += step) {
+      for (let y = 0; y <= 1024; y += step) {
         ctx.beginPath();
         ctx.moveTo(0, y);
-        ctx.lineTo(512, y);
+        ctx.lineTo(1024, y);
         ctx.stroke();
       }
 
       const tex = new THREE.CanvasTexture(canvas);
       tex.wrapS = THREE.RepeatWrapping;
       tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(12, 28);
+      tex.repeat.set(6, 14);
       return tex;
     };
+
+    // Helper: Horizontal Frosted Privacy / Manifestation Stripes on Glass
+    const createFrostedGlassTexture = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 1024; // Y represents height of glass panel
+      const ctx = canvas.getContext("2d")!;
+
+      // Clear glass background (crystal clear with faint soft tint)
+      ctx.fillStyle = "rgba(240, 248, 252, 0.04)";
+      ctx.fillRect(0, 0, 512, 1024);
+
+      // Frosted translucent white stripes in middle section (eye & waist levels)
+      ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
+
+      // Realistic horizontal manifestation bands matching executive corporate office
+      const stripeConfigs = [
+        { y: 340, h: 8 },
+        { y: 360, h: 12 },
+        { y: 385, h: 18 },
+        { y: 415, h: 26 },
+        { y: 455, h: 36 },
+        { y: 505, h: 48 },
+        { y: 565, h: 48 },
+        { y: 625, h: 36 },
+        { y: 670, h: 26 },
+        { y: 705, h: 18 },
+        { y: 730, h: 12 },
+        { y: 750, h: 8 },
+      ];
+
+      stripeConfigs.forEach((s) => {
+        ctx.fillRect(0, s.y, 512, s.h);
+      });
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      return tex;
+    };
+
+    const frostedTexture = createFrostedGlassTexture();
 
     // Materials
     const wallMaterial = new THREE.MeshStandardMaterial({
@@ -521,164 +584,474 @@ export default function OfficeFPV3D() {
       roughness: 0.9,
     });
     const floorMaterial = new THREE.MeshStandardMaterial({
-      map: createFloorTexture(),
-      roughness: 0.45,
+      map: createTravertineFloorTexture(),
+      roughness: 0.26, // Polished travertine sheen
+      metalness: 0.08,
     });
     const ceilingMaterial = new THREE.MeshStandardMaterial({
-      color: 0xfaf8f2,
+      color: 0xfaf9f6,
       roughness: 0.9,
     });
-    const doorLeafMaterial = new THREE.MeshStandardMaterial({
-      color: 0xf5efe6,
+    // Full-height Transparent Glass with Frosted Horizontal Manifestation
+    const glassMaterial = new THREE.MeshStandardMaterial({
+      map: frostedTexture,
+      transparent: true,
+      opacity: 0.78,
+      roughness: 0.06,
+      metalness: 0.12,
+      depthWrite: false, // Ensures interior furniture and wall posters render cleanly behind glass
+    });
+    // Brushed Satin Aluminum clamping tracks (clean architectural metal, NOT black bars)
+    const aluminumTrackMaterial = new THREE.MeshStandardMaterial({
+      color: 0xc8d0d8,
+      metalness: 0.85,
+      roughness: 0.22,
+    });
+    // Dark structural accent columns (bronze / marble cladding)
+    const columnMaterial = new THREE.MeshStandardMaterial({
+      color: 0x322d28,
+      roughness: 0.35,
+      metalness: 0.2,
+    });
+    // Polished Chrome / Stainless Steel for handles, pivot fittings & legs
+    const chromeMaterial = new THREE.MeshStandardMaterial({
+      color: 0xe8ecf0,
+      metalness: 0.95,
+      roughness: 0.1,
+    });
+    // Office furniture materials
+    const tableWoodMaterial = new THREE.MeshStandardMaterial({
+      color: 0x2e2924,
+      roughness: 0.4,
+    });
+    const chairMaterial = new THREE.MeshStandardMaterial({
+      color: 0x1e2022,
+      roughness: 0.7,
+    });
+    const plantPotMaterial = new THREE.MeshStandardMaterial({
+      color: 0xf5f5f5,
+      roughness: 0.3,
+    });
+    const leafMaterial = new THREE.MeshStandardMaterial({
+      color: 0x285935,
       roughness: 0.6,
-    });
-    const frameMaterial = new THREE.MeshStandardMaterial({
-      color: 0x1a1c1e,
-      roughness: 0.5,
-    });
-    const handleMaterial = new THREE.MeshStandardMaterial({
-      color: 0xc2410c, // Burnt orange
-      metalness: 0.8,
-      roughness: 0.2,
     });
 
     const corridorHeight = 3.2;
 
-    // Helper: Solid Wall Segment
+    // Helper: Solid Wall Segment (Back exhibition walls & boundary dividers)
     const buildWall = (x: number, y: number, z: number, w: number, h: number, d: number) => {
       const geo = new THREE.BoxGeometry(w, h, d);
       const mesh = new THREE.Mesh(geo, wallMaterial);
       mesh.position.set(x, y, z);
-      addSketchEdges(mesh, 0x1a1c1e);
       scene.add(mesh);
       return mesh;
     };
 
-    // Helper: Solid Door Frame with Lintel and Jambs
-    const buildDoorFrame = (
+    // Helper: Modern Frameless Glass Partition with Slim Satin Aluminum Channels
+    const buildGlassWall = (
+      x: number,
+      y: number,
+      z: number,
+      w: number,
+      h: number,
+      d: number
+    ) => {
+      const isZAxis = d > w;
+      const length = isZAxis ? d : w;
+      const channelThick = 0.03;
+      const glassH = h - channelThick * 2;
+
+      // Slim bottom clamping channel
+      const floorChan = new THREE.Mesh(
+        new THREE.BoxGeometry(isZAxis ? 0.04 : length, channelThick, isZAxis ? length : 0.04),
+        aluminumTrackMaterial
+      );
+      floorChan.position.set(x, channelThick / 2, z);
+      scene.add(floorChan);
+
+      // Slim top clamping channel
+      const ceilChan = new THREE.Mesh(
+        new THREE.BoxGeometry(isZAxis ? 0.04 : length, channelThick, isZAxis ? length : 0.04),
+        aluminumTrackMaterial
+      );
+      ceilChan.position.set(x, h - channelThick / 2, z);
+      scene.add(ceilChan);
+
+      // Tempered Glass Pane with frosted manifestation stripes
+      const glassGeo = new THREE.BoxGeometry(
+        isZAxis ? 0.015 : length,
+        glassH,
+        isZAxis ? length : 0.015
+      );
+      const glassMesh = new THREE.Mesh(glassGeo, glassMaterial);
+      glassMesh.position.set(x, channelThick + glassH / 2, z);
+      glassMesh.renderOrder = 10;
+      scene.add(glassMesh);
+
+      return glassMesh;
+    };
+
+    // Helper: Dark Marble / Bronze Structural Column (Clean architectural finish, no wireframe lines)
+    const buildStructuralColumn = (x: number, z: number, w = 0.32, d = 0.32) => {
+      const col = new THREE.Mesh(
+        new THREE.BoxGeometry(w, corridorHeight, d),
+        columnMaterial
+      );
+      col.position.set(x, corridorHeight / 2, z);
+      scene.add(col);
+      return col;
+    };
+
+    // Helper: Recessed Round LED Ceiling Pot Light
+    const createCeilingPotLight = (x: number, z: number) => {
+      // Metallic outer trim ring
+      const ring = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.11, 0.11, 0.015, 24),
+        aluminumTrackMaterial
+      );
+      ring.position.set(x, corridorHeight - 0.008, z);
+      scene.add(ring);
+
+      // Glowing LED disc
+      const disc = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.08, 0.08, 0.018, 24),
+        new THREE.MeshBasicMaterial({ color: 0xfffaed })
+      );
+      disc.position.set(x, corridorHeight - 0.01, z);
+      scene.add(disc);
+
+      // Soft downward point light
+      const light = new THREE.PointLight(0xfff6e5, 0.45, 6.0, 1.8);
+      light.position.set(x, corridorHeight - 0.1, z);
+      scene.add(light);
+    };
+
+    // Helper: Frameless Glass Door Transom (No heavy black frames!)
+    const buildGlassDoorFrame = (
       centerX: number,
       centerZ: number,
       orientation: "x" | "z",
       doorWidth = 1.2,
       doorHeight = 2.3
     ) => {
-      const frameThick = 0.08;
       const lintelH = corridorHeight - doorHeight;
 
       if (orientation === "z") {
-        // Lintel above door
-        const lintelGeo = new THREE.BoxGeometry(doorWidth, lintelH, 0.14);
-        const lintel = new THREE.Mesh(lintelGeo, wallMaterial);
-        lintel.position.set(centerX, doorHeight + lintelH / 2, centerZ);
-        addSketchEdges(lintel, 0x1a1c1e);
-        scene.add(lintel);
+        // Overhead glass transom panel above door
+        const transom = new THREE.Mesh(
+          new THREE.BoxGeometry(doorWidth, lintelH - 0.04, 0.015),
+          glassMaterial
+        );
+        transom.position.set(centerX, doorHeight + lintelH / 2, centerZ);
+        transom.renderOrder = 10;
+        scene.add(transom);
 
-        // Frame
-        const fTop = new THREE.Mesh(new THREE.BoxGeometry(doorWidth + 0.1, frameThick, 0.16), frameMaterial);
+        // Slim satin aluminum transom channel above door
+        const fTop = new THREE.Mesh(
+          new THREE.BoxGeometry(doorWidth, 0.025, 0.03),
+          aluminumTrackMaterial
+        );
         fTop.position.set(centerX, doorHeight, centerZ);
         scene.add(fTop);
 
-        const fLeft = new THREE.Mesh(new THREE.BoxGeometry(frameThick, doorHeight, 0.16), frameMaterial);
-        fLeft.position.set(centerX - doorWidth / 2, doorHeight / 2, centerZ);
-        scene.add(fLeft);
-
-        const fRight = new THREE.Mesh(new THREE.BoxGeometry(frameThick, doorHeight, 0.16), frameMaterial);
-        fRight.position.set(centerX + doorWidth / 2, doorHeight / 2, centerZ);
-        scene.add(fRight);
+        // Slim ceiling channel
+        const fCeil = new THREE.Mesh(
+          new THREE.BoxGeometry(doorWidth, 0.025, 0.03),
+          aluminumTrackMaterial
+        );
+        fCeil.position.set(centerX, corridorHeight - 0.012, centerZ);
+        scene.add(fCeil);
       } else {
-        const lintelGeo = new THREE.BoxGeometry(0.14, lintelH, doorWidth);
-        const lintel = new THREE.Mesh(lintelGeo, wallMaterial);
-        lintel.position.set(centerX, doorHeight + lintelH / 2, centerZ);
-        addSketchEdges(lintel, 0x1a1c1e);
-        scene.add(lintel);
+        // Overhead glass transom panel
+        const transom = new THREE.Mesh(
+          new THREE.BoxGeometry(0.015, lintelH - 0.04, doorWidth),
+          glassMaterial
+        );
+        transom.position.set(centerX, doorHeight + lintelH / 2, centerZ);
+        transom.renderOrder = 10;
+        scene.add(transom);
 
-        const fTop = new THREE.Mesh(new THREE.BoxGeometry(0.16, frameThick, doorWidth + 0.1), frameMaterial);
+        // Slim satin aluminum transom channel
+        const fTop = new THREE.Mesh(
+          new THREE.BoxGeometry(0.03, 0.025, doorWidth),
+          aluminumTrackMaterial
+        );
         fTop.position.set(centerX, doorHeight, centerZ);
         scene.add(fTop);
 
-        const fLeft = new THREE.Mesh(new THREE.BoxGeometry(0.16, doorHeight, frameThick), frameMaterial);
-        fLeft.position.set(centerX, doorHeight / 2, centerZ - doorWidth / 2);
-        scene.add(fLeft);
-
-        const fRight = new THREE.Mesh(new THREE.BoxGeometry(0.16, doorHeight, frameThick), frameMaterial);
-        fRight.position.set(centerX, doorHeight / 2, centerZ + doorWidth / 2);
-        scene.add(fRight);
+        // Slim ceiling channel
+        const fCeil = new THREE.Mesh(
+          new THREE.BoxGeometry(0.03, 0.025, doorWidth),
+          aluminumTrackMaterial
+        );
+        fCeil.position.set(centerX, corridorHeight - 0.012, centerZ);
+        scene.add(fCeil);
       }
     };
 
+    // Helper: 3D Office Potted Plant (Ficus / Palm in Modern Planter)
+    const createPottedPlant = (x: number, z: number) => {
+      const plantGroup = new THREE.Group();
+      plantGroup.position.set(x, 0, z);
+
+      // White minimalist cylindrical pot
+      const pot = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.24, 0.18, 0.6, 24),
+        plantPotMaterial
+      );
+      pot.position.y = 0.3;
+      plantGroup.add(pot);
+
+      // Soil
+      const soil = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.22, 0.22, 0.04, 16),
+        new THREE.MeshStandardMaterial({ color: 0x33261d, roughness: 0.9 })
+      );
+      soil.position.y = 0.59;
+      plantGroup.add(soil);
+
+      // Lush green foliage tiers
+      for (let i = 0; i < 4; i++) {
+        const leafTier = new THREE.Mesh(
+          new THREE.ConeGeometry(0.36 - i * 0.05, 0.45, 8),
+          leafMaterial
+        );
+        leafTier.position.y = 0.8 + i * 0.28;
+        leafTier.rotation.y = i * 0.7;
+        plantGroup.add(leafTier);
+      }
+
+      scene.add(plantGroup);
+    };
+
+    // Helper: Modern Executive Conference Chair
+    const createOfficeChair = (x: number, z: number, rotationY = 0) => {
+      const chair = new THREE.Group();
+      chair.position.set(x, 0, z);
+      chair.rotation.y = rotationY;
+
+      // Chrome five-star base stem
+      const stem = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.025, 0.025, 0.45, 12),
+        chromeMaterial
+      );
+      stem.position.y = 0.225;
+      chair.add(stem);
+
+      // Chrome base legs
+      for (let a = 0; a < 5; a++) {
+        const leg = new THREE.Mesh(
+          new THREE.BoxGeometry(0.26, 0.02, 0.03),
+          chromeMaterial
+        );
+        leg.position.set(0.13, 0.04, 0);
+        leg.rotation.y = (a * Math.PI * 2) / 5;
+        chair.add(leg);
+      }
+
+      // Seat cushion
+      const seat = new THREE.Mesh(
+        new THREE.BoxGeometry(0.48, 0.06, 0.46),
+        chairMaterial
+      );
+      seat.position.y = 0.48;
+      chair.add(seat);
+
+      // Backrest
+      const back = new THREE.Mesh(
+        new THREE.BoxGeometry(0.46, 0.52, 0.05),
+        chairMaterial
+      );
+      back.position.set(0, 0.76, -0.21);
+      chair.add(back);
+
+      scene.add(chair);
+    };
+
+    // Helper: Executive Conference Room (Room 2)
+    const buildConferenceRoom = (centerX: number, centerZ: number) => {
+      // Large conference table
+      const tableTop = new THREE.Mesh(
+        new THREE.BoxGeometry(1.4, 0.06, 2.6),
+        tableWoodMaterial
+      );
+      tableTop.position.set(centerX, 0.74, centerZ);
+      scene.add(tableTop);
+
+      // Chrome cylindrical table legs
+      const legOffsets = [
+        [-0.55, -1.05],
+        [0.55, -1.05],
+        [-0.55, 1.05],
+        [0.55, 1.05],
+      ];
+      legOffsets.forEach(([lx, lz]) => {
+        const leg = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.035, 0.035, 0.71, 16),
+          chromeMaterial
+        );
+        leg.position.set(centerX + lx, 0.355, centerZ + lz);
+        scene.add(leg);
+      });
+
+      // 6 Conference Chairs around table
+      createOfficeChair(centerX - 0.75, centerZ - 0.8, Math.PI / 2);
+      createOfficeChair(centerX - 0.75, centerZ, Math.PI / 2);
+      createOfficeChair(centerX - 0.75, centerZ + 0.8, Math.PI / 2);
+      createOfficeChair(centerX + 0.75, centerZ - 0.8, -Math.PI / 2);
+      createOfficeChair(centerX + 0.75, centerZ, -Math.PI / 2);
+      createOfficeChair(centerX + 0.75, centerZ + 0.8, -Math.PI / 2);
+
+      // Potted plant in corner
+      createPottedPlant(centerX + 1.4, centerZ + 1.8);
+    };
+
+    // Helper: Executive Work Desk with Laptop & Chair
+    const buildExecutiveDesk = (centerX: number, centerZ: number, rotY = 0) => {
+      const deskGroup = new THREE.Group();
+      deskGroup.position.set(centerX, 0, centerZ);
+      deskGroup.rotation.y = rotY;
+
+      // Desk top
+      const top = new THREE.Mesh(
+        new THREE.BoxGeometry(1.6, 0.05, 0.8),
+        tableWoodMaterial
+      );
+      top.position.y = 0.74;
+      deskGroup.add(top);
+
+      // Legs
+      const dLegs = [
+        [-0.7, -0.32],
+        [0.7, -0.32],
+        [-0.7, 0.32],
+        [0.7, 0.32],
+      ];
+      dLegs.forEach(([lx, lz]) => {
+        const leg = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.03, 0.03, 0.715, 12),
+          chromeMaterial
+        );
+        leg.position.set(lx, 0.36, lz);
+        deskGroup.add(leg);
+      });
+
+      // Modern laptop on desk
+      const laptopBase = new THREE.Mesh(
+        new THREE.BoxGeometry(0.32, 0.015, 0.22),
+        chromeMaterial
+      );
+      laptopBase.position.set(0, 0.77, 0);
+      deskGroup.add(laptopBase);
+
+      const laptopScreen = new THREE.Mesh(
+        new THREE.BoxGeometry(0.32, 0.2, 0.012),
+        new THREE.MeshBasicMaterial({ color: 0x38bdf8 })
+      );
+      laptopScreen.position.set(0, 0.87, -0.1);
+      laptopScreen.rotation.x = -0.2;
+      deskGroup.add(laptopScreen);
+
+      scene.add(deskGroup);
+
+      // Ergonomic desk chair
+      createOfficeChair(centerX, centerZ - 0.7, 0);
+
+      // Potted plant
+      createPottedPlant(centerX - 1.2, centerZ + 0.8);
+    };
+
     // ==========================================
-    // 5. ARCHITECTURAL BUILDING (ZERO LEAKS, ZERO VOIDS)
+    // 5. ARCHITECTURAL BUILDING (REALISTIC GLASS CORPORATE SUITE)
     // ==========================================
 
-    // Seamless continuous floor covering everything
+    // Seamless continuous travertine tile floor
     const fullFloor = new THREE.Mesh(new THREE.PlaneGeometry(16, 32), floorMaterial);
     fullFloor.rotation.x = -Math.PI / 2;
     fullFloor.position.set(0, 0, -8);
     scene.add(fullFloor);
 
-    // Continuous ceiling covering everything
+    // Continuous bright white ceiling
     const fullCeil = new THREE.Mesh(new THREE.PlaneGeometry(16, 32), ceilingMaterial);
     fullCeil.rotation.x = Math.PI / 2;
     fullCeil.position.set(0, corridorHeight, -8);
     scene.add(fullCeil);
 
-    // --- A. ENTRANCE LOBBY ENCLOSURE (z = 0 to z = 4.5) ---
-    // Solid full-width lobby dividing wall at z = 0 (BLOCKS EVERYTHING BEHIND IT)
-    buildDoorFrame(0, 0, "z", 1.2, 2.3);
-    buildWall(-4.6, corridorHeight / 2, 0, 8.0, corridorHeight, 0.14); // Left of entrance
-    buildWall(4.6, corridorHeight / 2, 0, 8.0, corridorHeight, 0.14);  // Right of entrance
+    // Ceiling Recessed Round LED Pot Lights (Downlights matching photo)
+    const potLightZs = [2.2, 0, -2.5, -5.0, -7.5, -10.0, -12.5, -15.0, -17.5, -20.0];
+    potLightZs.forEach((lz) => {
+      createCeilingPotLight(0, lz);
+    });
 
-    // Lobby side and back walls (you are in a real, clean entrance foyer)
-    buildWall(-1.8, corridorHeight / 2, 2.25, 0.14, corridorHeight, 4.5); // Lobby left wall
-    buildWall(1.8, corridorHeight / 2, 2.25, 0.14, corridorHeight, 4.5);  // Lobby right wall
-    buildWall(0, corridorHeight / 2, 4.5, 3.6, corridorHeight, 0.14);    // Lobby back wall
+    // --- A. ENTRANCE LOBBY ENCLOSURE (z = 0 to z = 4.5) ---
+    // Clean solid entrance wall separating lobby from corridor (prevents optical clutter)
+    buildGlassDoorFrame(0, 0, "z", 1.2, 2.3);
+    buildWall(-4.6, corridorHeight / 2, 0, 8.0, corridorHeight, 0.14);
+    buildWall(4.6, corridorHeight / 2, 0, 8.0, corridorHeight, 0.14);
+
+    // Lobby side and back architectural walls
+    buildWall(-1.8, corridorHeight / 2, 2.25, 0.14, corridorHeight, 4.5);
+    buildWall(1.8, corridorHeight / 2, 2.25, 0.14, corridorHeight, 4.5);
+    buildWall(0, corridorHeight / 2, 4.5, 3.6, corridorHeight, 0.14);
 
     // Overhead lobby fixture
     const lobbyLight = new THREE.PointLight(0xffedd5, 0.6, 6);
     lobbyLight.position.set(0, 2.9, 2.2);
     scene.add(lobbyLight);
 
-    // --- B. CENTRAL CORRIDOR WALLS (x = -1.2 and x = 1.2) ---
-    // Corridor Left Wall (x = -1.2)
-    buildWall(-1.2, corridorHeight / 2, -0.95, 0.14, corridorHeight, 1.9); // z: 0 to -1.9
-    buildDoorFrame(-1.2, -2.5, "x", 1.2, 2.3);                             // Doorway 1
-    buildWall(-1.2, corridorHeight / 2, -6.5, 0.14, corridorHeight, 6.8);  // z: -3.1 to -9.9
-    buildDoorFrame(-1.2, -10.5, "x", 1.2, 2.3);                            // Doorway 3
-    buildWall(-1.2, corridorHeight / 2, -14.3, 0.14, corridorHeight, 6.4); // z: -11.1 to -17.5
+    // --- B. CENTRAL CORRIDOR GLASS PARTITION WALLS (x = -1.2 and x = 1.2) ---
+    // Corridor Left Glass Wall (x = -1.2)
+    buildGlassWall(-1.2, corridorHeight / 2, -0.95, 0.04, corridorHeight, 1.9); // z: 0 to -1.9
+    buildGlassDoorFrame(-1.2, -2.5, "x", 1.2, 2.3);                             // Glass Doorway 1
+    buildStructuralColumn(-1.2, -4.5);                                         // Accent Pillar
+    buildGlassWall(-1.2, corridorHeight / 2, -6.5, 0.04, corridorHeight, 6.8);  // z: -3.1 to -9.9
+    buildStructuralColumn(-1.2, -8.5);                                         // Accent Pillar
+    buildGlassDoorFrame(-1.2, -10.5, "x", 1.2, 2.3);                            // Glass Doorway 3
+    buildStructuralColumn(-1.2, -12.5);                                        // Accent Pillar
+    buildGlassWall(-1.2, corridorHeight / 2, -14.3, 0.04, corridorHeight, 6.4); // z: -11.1 to -17.5
 
-    // Corridor Right Wall (x = 1.2)
-    buildWall(1.2, corridorHeight / 2, -2.95, 0.14, corridorHeight, 5.9);  // z: 0 to -5.9
-    buildDoorFrame(1.2, -6.5, "x", 1.2, 2.3);                              // Doorway 2
-    buildWall(1.2, corridorHeight / 2, -12.3, 0.14, corridorHeight, 10.4); // z: -7.1 to -17.5
+    // Corridor Right Glass Wall (x = 1.2)
+    buildGlassWall(1.2, corridorHeight / 2, -2.95, 0.04, corridorHeight, 5.9);  // z: 0 to -5.9 (Meeting room view!)
+    buildStructuralColumn(1.2, -4.2);                                          // Accent Pillar
+    buildGlassDoorFrame(1.2, -6.5, "x", 1.2, 2.3);                              // Glass Doorway 2
+    buildStructuralColumn(1.2, -8.8);                                          // Accent Pillar
+    buildGlassWall(1.2, corridorHeight / 2, -12.3, 0.04, corridorHeight, 10.4); // z: -7.1 to -17.5
+    buildStructuralColumn(1.2, -12.5);                                         // Accent Pillar
 
-    // Corridor End Doorway 4 (z = -17.5)
-    buildDoorFrame(0, -17.5, "z", 1.2, 2.3);
+    // Corridor End Solid Wall with Glass Doorway 4 (z = -17.5)
+    buildGlassDoorFrame(0, -17.5, "z", 1.2, 2.3);
     buildWall(-0.9, corridorHeight / 2, -17.5, 0.6, corridorHeight, 0.14);
     buildWall(0.9, corridorHeight / 2, -17.5, 0.6, corridorHeight, 0.14);
 
-    // --- C. SOLID ENCLOSED SIDE ROOMS (SPACIOUS ARCHITECTURAL ROOMS) ---
+    // --- C. SOLID ENCLOSED SIDE ROOMS & INTERIORS ---
     // Room 1 Enclosure (About Me, Left Side, z = -2.5, 4m wide in Z)
     buildWall(-3.0, corridorHeight / 2, -0.5, 3.6, corridorHeight, 0.14);  // North wall
     buildWall(-3.0, corridorHeight / 2, -4.5, 3.6, corridorHeight, 0.14);  // South wall
-    buildWall(-4.8, corridorHeight / 2, -2.5, 0.14, corridorHeight, 4.0);  // Back exhibition wall (4.0m wide!)
+    buildWall(-4.8, corridorHeight / 2, -2.5, 0.14, corridorHeight, 4.0);  // Back exhibition wall
+    buildExecutiveDesk(-3.0, -2.5, Math.PI / 2);
 
     // Room 2 Enclosure (Selected Systems, Right Side, z = -6.5, 4.6m wide in Z)
     buildWall(3.2, corridorHeight / 2, -4.2, 4.0, corridorHeight, 0.14);   // North wall
     buildWall(3.2, corridorHeight / 2, -8.8, 4.0, corridorHeight, 0.14);   // South wall
-    buildWall(5.2, corridorHeight / 2, -6.5, 0.14, corridorHeight, 4.6);  // Wide exhibition wall (4.6m wide!)
+    buildWall(5.2, corridorHeight / 2, -6.5, 0.14, corridorHeight, 4.6);   // Back exhibition wall
+    // Executive Meeting Boardroom visible through glass!
+    buildConferenceRoom(3.2, -6.5);
 
     // Room 3 Enclosure (Technical Arsenal, Left Side, z = -10.5, 4m wide in Z)
     buildWall(-3.0, corridorHeight / 2, -8.5, 3.6, corridorHeight, 0.14);  // North wall
     buildWall(-3.0, corridorHeight / 2, -12.5, 3.6, corridorHeight, 0.14); // South wall
-    buildWall(-4.8, corridorHeight / 2, -10.5, 0.14, corridorHeight, 4.0); // Back exhibition wall (4.0m wide!)
+    buildWall(-4.8, corridorHeight / 2, -10.5, 0.14, corridorHeight, 4.0); // Back exhibition wall
+    buildExecutiveDesk(-3.0, -10.5, Math.PI / 2);
 
     // Room 4 Enclosure (Contact Drafting Desk, Back, z = -17.5 to -22.5)
     buildWall(0, corridorHeight / 2, -22.5, 4.4, corridorHeight, 0.14);    // Back wall
     buildWall(-2.2, corridorHeight / 2, -20.0, 0.14, corridorHeight, 5.0); // Left wall
     buildWall(2.2, corridorHeight / 2, -20.0, 0.14, corridorHeight, 5.0);  // Right wall
+    buildExecutiveDesk(0, -20.0, 0);
 
     // ==========================================
-    // 6. 3D SWINGING DOORS
+    // 6. 3D SWINGING GLASS DOORS WITH STAINLESS STEEL LADDER PULL HANDLES
     // ==========================================
     const create3DDoor = (
       nameKey: "entrance" | "door1" | "door2" | "door3" | "door4",
@@ -694,56 +1067,96 @@ export default function OfficeFPV3D() {
 
       const doorW = 1.14;
       const doorH = 2.24;
-      const doorThick = 0.05;
+      const doorThick = 0.02; // Realistic 12mm-19mm tempered architectural glass
 
-      // Solid Door Leaf
+      // Frameless Tempered Glass Door Leaf with Frosted Horizontal Stripes
       const leafGeo = new THREE.BoxGeometry(doorW, doorH, doorThick);
-      const leaf = new THREE.Mesh(leafGeo, doorLeafMaterial);
+      const leaf = new THREE.Mesh(leafGeo, glassMaterial);
       leaf.position.set(doorW / 2, doorH / 2, 0);
-      addSketchEdges(leaf, 0x1a1c1e);
+      leaf.renderOrder = 11;
       doorHinge.add(leaf);
 
-      // Inset Panel (Solid opaque architectural panel with sketch border)
-      const panelGeo = new THREE.BoxGeometry(doorW * 0.6, doorH * 0.45, doorThick + 0.01);
-      const panelMat = new THREE.MeshStandardMaterial({
-        color: 0xede8dc,
-        roughness: 0.7,
-      });
-      const panel = new THREE.Mesh(panelGeo, panelMat);
-      panel.position.set(doorW / 2, doorH * 0.58, 0);
-      addSketchEdges(panel, 0x1a1c1e);
-      doorHinge.add(panel);
+      // Stainless Steel / Chrome Top & Bottom Pivot Patch Fittings
+      const patchTop = new THREE.Mesh(
+        new THREE.BoxGeometry(0.14, 0.045, 0.038),
+        chromeMaterial
+      );
+      patchTop.position.set(0.08, doorH - 0.025, 0);
+      doorHinge.add(patchTop);
 
-      // Handle Lever
-      const handleGeo = new THREE.BoxGeometry(0.18, 0.03, 0.06);
-      const handle = new THREE.Mesh(handleGeo, handleMaterial);
-      handle.position.set(doorW * 0.85, doorH * 0.45, doorThick / 2 + 0.03);
-      doorHinge.add(handle);
+      const patchBottom = new THREE.Mesh(
+        new THREE.BoxGeometry(0.14, 0.045, 0.038),
+        chromeMaterial
+      );
+      patchBottom.position.set(0.08, 0.025, 0);
+      doorHinge.add(patchBottom);
 
-      // Door Plaque
+      // Long Vertical Chrome Tubular Ladder Pull Handle (D-Handle)
+      const handleGroup = new THREE.Group();
+      const hX = doorW * 0.85;
+      const hY = 1.05;
+      const hLength = 1.05;
+      const hRadius = 0.016;
+
+      // Vertical tubular bar (Outside)
+      const barOut = new THREE.Mesh(
+        new THREE.CylinderGeometry(hRadius, hRadius, hLength, 16),
+        chromeMaterial
+      );
+      barOut.position.set(hX, hY, 0.04);
+      handleGroup.add(barOut);
+
+      // Vertical tubular bar (Inside)
+      const barIn = new THREE.Mesh(
+        new THREE.CylinderGeometry(hRadius, hRadius, hLength, 16),
+        chromeMaterial
+      );
+      barIn.position.set(hX, hY, -0.04);
+      handleGroup.add(barIn);
+
+      // Standoff mount brackets connecting handle to glass
+      const mountTop = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.012, 0.012, 0.085, 12),
+        chromeMaterial
+      );
+      mountTop.rotation.x = Math.PI / 2;
+      mountTop.position.set(hX, hY + 0.4, 0);
+      handleGroup.add(mountTop);
+
+      const mountBottom = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.012, 0.012, 0.085, 12),
+        chromeMaterial
+      );
+      mountBottom.rotation.x = Math.PI / 2;
+      mountBottom.position.set(hX, hY - 0.4, 0);
+      handleGroup.add(mountBottom);
+
+      doorHinge.add(handleGroup);
+
+      // Minimalist Frosted Glass Door Plaque at Eye Level
       const pCanvas = document.createElement("canvas");
       pCanvas.width = 512;
       pCanvas.height = 128;
       const pCtx = pCanvas.getContext("2d")!;
-      pCtx.fillStyle = "#ffffff";
+      pCtx.fillStyle = "rgba(255, 255, 255, 0.9)";
       pCtx.fillRect(0, 0, 512, 128);
-      pCtx.strokeStyle = "#1a1c1e";
-      pCtx.lineWidth = 6;
+      pCtx.strokeStyle = "rgba(160, 170, 180, 0.45)";
+      pCtx.lineWidth = 3;
       pCtx.strokeRect(4, 4, 504, 120);
 
       pCtx.fillStyle = "#1a1c1e";
-      pCtx.font = "bold 32px 'Space Grotesk', sans-serif";
+      pCtx.font = "bold 30px 'Space Grotesk', sans-serif";
       pCtx.fillText(plaqueText, 24, 52);
 
       pCtx.fillStyle = "#c2410c";
-      pCtx.font = "bold 22px 'JetBrains Mono', monospace";
+      pCtx.font = "bold 20px 'JetBrains Mono', monospace";
       pCtx.fillText(subText, 24, 95);
 
       const pTex = new THREE.CanvasTexture(pCanvas);
-      const pGeo = new THREE.PlaneGeometry(0.7, 0.18);
-      const pMat = new THREE.MeshBasicMaterial({ map: pTex });
+      const pGeo = new THREE.PlaneGeometry(0.65, 0.16);
+      const pMat = new THREE.MeshBasicMaterial({ map: pTex, transparent: true });
       const plaqueMesh = new THREE.Mesh(pGeo, pMat);
-      plaqueMesh.position.set(doorW / 2, doorH * 0.88, doorThick / 2 + 0.01);
+      plaqueMesh.position.set(doorW / 2, doorH * 0.74, doorThick / 2 + 0.005);
       doorHinge.add(plaqueMesh);
 
       scene.add(doorHinge);
