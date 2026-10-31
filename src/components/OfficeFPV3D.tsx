@@ -466,28 +466,32 @@ export default function OfficeFPV3D() {
     camera.lookAt(currentCamLook.current);
     cameraRef.current = camera;
 
-    // 3. Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    // 3. Renderer - Optimized for Silky Smooth 60FPS Walkthrough
+    const renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false,
+      powerPreference: "high-performance",
+    });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.shadowMap.enabled = false;
     container.appendChild(renderer.domElement);
 
-    // 4. Lighting - Balanced for High-Contrast Architectural Form
-    const ambientLight = new THREE.AmbientLight(0xfff8ed, 0.65);
+    // 4. Lighting - Optimized High-Performance Architectural Illumination
+    const ambientLight = new THREE.AmbientLight(0xfff8ed, 0.7);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffedd5, 0.75);
+    const dirLight = new THREE.DirectionalLight(0xffedd5, 0.7);
     dirLight.position.set(3, 7, 2);
     scene.add(dirLight);
 
-    // Overhead corridor strip lights
-    for (let z = 2; z >= -19; z -= 3.5) {
-      const pointLight = new THREE.PointLight(0xfff1dc, 0.45, 6.5);
-      pointLight.position.set(0, 2.9, z);
-      scene.add(pointLight);
-    }
+    // 4 Key Zone Lights along the corridor (Smooth, zero GPU overload)
+    const corridorLightZones = [1.5, -4.5, -10.5, -16.5];
+    corridorLightZones.forEach((lz) => {
+      const zoneLight = new THREE.PointLight(0xfff2dc, 0.55, 9.0, 1.5);
+      zoneLight.position.set(0, 2.85, lz);
+      scene.add(zoneLight);
+    });
 
     // Helper: Anti-Z-Fighting Sketched Wireframe Edges
     const addSketchEdges = (mesh: THREE.Mesh, color = 0x1a1c1e, threshold = 25) => {
@@ -739,7 +743,7 @@ export default function OfficeFPV3D() {
       return col;
     };
 
-    // Helper: Recessed Round LED Ceiling Pot Light
+    // Helper: Recessed Round LED Ceiling Pot Light (Emissive Fixture)
     const createCeilingPotLight = (x: number, z: number) => {
       // Metallic outer trim ring
       const ring = new THREE.Mesh(
@@ -749,18 +753,13 @@ export default function OfficeFPV3D() {
       ring.position.set(x, corridorHeight - 0.008, z);
       scene.add(ring);
 
-      // Glowing LED disc
+      // Glowing LED disc (Emissive - lightweight zero GPU lighting cost)
       const disc = new THREE.Mesh(
         new THREE.CylinderGeometry(0.08, 0.08, 0.018, 24),
         new THREE.MeshBasicMaterial({ color: 0xfffaed })
       );
       disc.position.set(x, corridorHeight - 0.01, z);
       scene.add(disc);
-
-      // Soft downward point light
-      const light = new THREE.PointLight(0xfff6e5, 0.45, 6.0, 1.8);
-      light.position.set(x, corridorHeight - 0.1, z);
-      scene.add(light);
     };
 
     // Helper: Frameless Glass Door Transom (No heavy black frames!)
@@ -1537,40 +1536,17 @@ export default function OfficeFPV3D() {
     };
     window.addEventListener("mousemove", handleMouseMove);
 
-    const easeInOutCubic = (t: number) => {
-      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    // Smooth, cinematic ease-in-out curve for seamless waypoint transitions
+    const smoothEase = (t: number) => {
+      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
     };
 
     const animate = () => {
       reqId = requestAnimationFrame(animate);
       const now = performance.now();
 
-      // Waypoint processing
-      if (currentWaypoint.current) {
-        const wp = currentWaypoint.current;
-
-        if (now < wp.pauseUntil) {
-          // Waiting for door to swing open
-        } else {
-          const actualStart = wp.pauseUntil > 0 ? wp.pauseUntil : wp.startTime;
-          const elapsed = now - actualStart;
-          const progress = Math.min(1, elapsed / wp.duration);
-          const eased = easeInOutCubic(progress);
-
-          currentCamPos.current.lerpVectors(wp.startPos, wp.endPos, eased);
-          currentCamLook.current.lerpVectors(wp.startLook, wp.endLook, eased);
-
-          if (progress < 1) {
-            currentCamPos.current.y = 1.6 + Math.sin(now * 0.008) * 0.015;
-          }
-
-          if (progress >= 1) {
-            currentCamPos.current.copy(wp.endPos);
-            currentCamLook.current.copy(wp.endLook);
-            currentWaypoint.current = null;
-          }
-        }
-      } else if (waypointQueue.current.length > 0) {
+      // Check if we need to immediately load next waypoint
+      if (!currentWaypoint.current && waypointQueue.current.length > 0) {
         const nextWp = waypointQueue.current.shift()!;
         if (nextWp.onStart) {
           nextWp.onStart();
@@ -1586,7 +1562,28 @@ export default function OfficeFPV3D() {
           duration: nextWp.duration,
           pauseUntil: pauseDuration > 0 ? now + pauseDuration : 0,
         };
-      } else {
+      }
+
+      // Waypoint processing
+      if (currentWaypoint.current) {
+        const wp = currentWaypoint.current;
+
+        if (now >= wp.pauseUntil) {
+          const actualStart = wp.pauseUntil > 0 ? wp.pauseUntil : wp.startTime;
+          const elapsed = now - actualStart;
+          const progress = Math.min(1, elapsed / wp.duration);
+          const eased = smoothEase(progress);
+
+          currentCamPos.current.lerpVectors(wp.startPos, wp.endPos, eased);
+          currentCamLook.current.lerpVectors(wp.startLook, wp.endLook, eased);
+
+          if (progress >= 1) {
+            currentCamPos.current.copy(wp.endPos);
+            currentCamLook.current.copy(wp.endLook);
+            currentWaypoint.current = null;
+          }
+        }
+      } else if (waypointQueue.current.length === 0) {
         if (isWalkingRef.current) {
           isWalkingRef.current = false;
           setIsWalking(false);
