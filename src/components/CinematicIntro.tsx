@@ -8,12 +8,12 @@ interface CinematicIntroProps {
 
 export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [progress, setProgress] = useState(12);
-  const [timecode, setTimecode] = useState("00:00:01:04");
+  const [progress, setProgress] = useState(0);
+  const [timecode, setTimecode] = useState("00:00:01:00");
 
   // Timecode generator
   useEffect(() => {
-    let frame = 4;
+    let frame = 0;
     const interval = setInterval(() => {
       frame = (frame + 1) % 24;
       const pad = (n: number) => (n < 10 ? `0${n}` : `${n}`);
@@ -23,21 +23,30 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
     return () => clearInterval(interval);
   }, []);
 
-  // Progress simulation (smoothly scales up)
+  // Smooth 3.5-second cinematic loading progress
   useEffect(() => {
-    const timer = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 98) {
-          clearInterval(timer);
-          return 98;
-        }
-        const step = Math.floor(Math.random() * 14) + 6;
-        return Math.min(98, prev + step);
-      });
-    }, 120);
+    const startTime = performance.now();
+    const duration = 3500; // Exactly 3.5 seconds
 
-    return () => clearInterval(timer);
-  }, []);
+    let frameId: number;
+    const tick = () => {
+      const now = performance.now();
+      const elapsed = now - startTime;
+      const pct = Math.min(100, Math.round((elapsed / duration) * 100));
+      setProgress(pct);
+
+      if (elapsed < duration) {
+        frameId = requestAnimationFrame(tick);
+      } else {
+        if (onComplete) {
+          onComplete();
+        }
+      }
+    };
+
+    frameId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frameId);
+  }, [onComplete]);
 
   // Real-time 3D Architectural Motion Canvas (Simulates a rendered studio video)
   useEffect(() => {
