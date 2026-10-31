@@ -2109,9 +2109,20 @@ export default function OfficeFPV3D() {
               >
                 <span>{label}</span>
                 {isLocked && (
-                  <span className="text-[10px] opacity-60" title="Locked">
-                    🔒
-                  </span>
+                  <svg
+                    className="w-2.5 h-2.5 shrink-0"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="#94a3b8"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-label="Locked"
+                  >
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" fill="#cbd5e1" stroke="#94a3b8" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#94a3b8" />
+                    <circle cx="12" cy="16" r="1.5" fill="#64748b" />
+                  </svg>
                 )}
               </button>
             );
