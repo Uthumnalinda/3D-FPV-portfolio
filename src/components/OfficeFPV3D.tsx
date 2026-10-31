@@ -2070,9 +2070,6 @@ export default function OfficeFPV3D() {
           <span className="font-display font-black text-base sm:text-lg tracking-normal text-stone-900 inline-block scale-y-125 origin-left">
             UTHUM NALINDA
           </span>
-          <span className="text-[10px] font-mono text-stone-600 hidden sm:inline ml-1">
-            // 3D FPV ARCHITECTURAL WALKTHROUGH
-          </span>
         </div>
 
         {/* Corridor Waypoint Navigation with Security Access Indicators */}
