@@ -2141,24 +2141,18 @@ export default function OfficeFPV3D() {
             </span>
             <span className="text-stone-700">
               {isWalking
-                ? "Moving through hallway..."
+                ? "Walking inside..."
                 : location === "LOBBY"
-                ? "Standing in entrance lobby. Drag the visitor pass from the stand to the scanner to enter."
-                : location === "CORRIDOR_1"
-                ? "Outside Room 01 (About Me). Click door to open & enter"
+                ? "Scan your pass to enter."
+                : location === "CORRIDOR_1" || location === "CORRIDOR_2" || location === "CORRIDOR_3" || location === "CORRIDOR_4"
+                ? "Click any door to enter."
                 : location === "INSIDE_1"
-                ? "Inside Room 01. Click the wall dossier to expand details"
-                : location === "CORRIDOR_2"
-                ? "Outside Room 02 (Selected Systems). Click door to open & enter"
+                ? "Click the board to view."
                 : location === "INSIDE_2"
-                ? "Inside Room 02. Click any of the 3 wall project boards to inspect"
-                : location === "CORRIDOR_3"
-                ? "Outside Room 03 (Technical Arsenal). Click door to open & enter"
+                ? "Click any project to view."
                 : location === "INSIDE_3"
-                ? "Inside Room 03. Click technical stack wall to inspect tools"
-                : location === "CORRIDOR_4"
-                ? "Outside Room 04 (Contact Desk). Click door to open & enter"
-                : "Inside Room 04. Click contact terminal wall to send message"}
+                ? "Click wall to view tools."
+                : "Click desk to send a message."}
             </span>
 
             {/* In-room Expand Button */}
@@ -2584,34 +2578,42 @@ export default function OfficeFPV3D() {
         </button>
 
         {/* Current Location Indicator */}
-        <div className="text-center">
+        <div className="text-center font-mono">
           <div className="font-bold tracking-wider text-stone-900">
             {location === "LOBBY"
-              ? "00 // ENTRANCE LOBBY FOYER"
+              ? "Entrance Lobby"
               : location === "CORRIDOR_1"
-              ? "HALLWAY // DOOR 01: ABOUT ME"
+              ? "Hallway • Room 01"
               : location === "INSIDE_1"
-              ? "INSIDE ROOM 01 // ABOUT ME DOSSIER"
+              ? "Room 01: About Me"
               : location === "CORRIDOR_2"
-              ? "HALLWAY // DOOR 02: SELECTED SYSTEMS"
+              ? "Hallway • Room 02"
               : location === "INSIDE_2"
-              ? "INSIDE ROOM 02 // 03 SYSTEM SCHEMATICS"
+              ? "Room 02: Projects"
               : location === "CORRIDOR_3"
-              ? "HALLWAY // DOOR 03: TECHNICAL ARSENAL"
+              ? "Hallway • Room 03"
               : location === "INSIDE_3"
-              ? "INSIDE ROOM 03 // TECHNICAL ARSENAL & TOOLING"
+              ? "Room 03: Tech Stack"
               : location === "CORRIDOR_4"
-              ? "HALLWAY // DOOR 04: CONTACT DESK"
-              : "INSIDE ROOM 04 // CORNER DRAFTING DESK"}
+              ? "Hallway • Room 04"
+              : "Room 04: Contact"}
           </div>
           <div className="text-[10px] text-stone-600 mt-0.5">
             {isWalking
-              ? "Door unlocked. Walking inside..."
+              ? "Walking inside..."
               : location === "LOBBY"
               ? cardHintDenied
-                ? "The door is locked. Drag and drop your pass onto the scanner to enter."
-                : "Pick up your visitor pass from the stand and scan it at the door."
-              : "Click any door in 3D to enter directly, or use controls below"}
+                ? "Door locked. Scan your pass to enter."
+                : "Scan your pass to enter."
+              : location.startsWith("INSIDE_1")
+              ? "Click the board to view."
+              : location.startsWith("INSIDE_2")
+              ? "Click any project to view."
+              : location.startsWith("INSIDE_3")
+              ? "Click wall to view tools."
+              : location.startsWith("INSIDE_4")
+              ? "Click desk to send a message."
+              : "Click any door to enter."}
           </div>
         </div>
 
