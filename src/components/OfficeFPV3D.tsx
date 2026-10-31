@@ -344,12 +344,44 @@ export default function OfficeFPV3D() {
     [runSequence, setDoorOpen]
   );
 
-  // Quick navigation from top header
+  // Denial Feedback when clicking instead of dragging or clicking locked links
+  const showDeniedHint = useCallback(() => {
+    setCardHintDenied(true);
+    // Electronic access denied low beep
+    try {
+      const audioCtx = new (window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(190, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.18);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.18);
+    } catch {
+      // Audio policy fallback
+    }
+    setTimeout(() => setCardHintDenied(false), 2400);
+  }, []);
+
+  // Quick navigation from top header with Access Control
   const handleHeaderNav = useCallback(
     (dest: "LOBBY" | "ROOM_1" | "ROOM_2" | "ROOM_3" | "ROOM_4") => {
+      if (dest === "LOBBY") {
+        navigateTo("LOBBY");
+        return;
+      }
+      // Security Enforcement: Cannot bypass locked entrance door from lobby without scanning visitor pass
+      if (location === "LOBBY" && !nfcAccessGranted) {
+        showDeniedHint();
+        return;
+      }
       navigateTo(dest);
     },
-    [navigateTo]
+    [location, nfcAccessGranted, navigateTo, showDeniedHint]
   );
 
   // Helper to project 3D NFC reader position to 2D screen coordinates
@@ -420,28 +452,6 @@ export default function OfficeFPV3D() {
     [getProjectedNfcPos, navigateTo, nfcAccessGranted]
   );
 
-  // Denial Feedback when clicking instead of dragging
-  const showDeniedHint = useCallback(() => {
-    setCardHintDenied(true);
-    // Electronic access denied low beep
-    try {
-      const audioCtx = new (window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(190, audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.18);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.18);
-    } catch {
-      // Audio policy fallback
-    }
-    setTimeout(() => setCardHintDenied(false), 2400);
-  }, []);
 
   // Drag-and-Drop Handlers for the Floating NFC Card
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
@@ -2017,7 +2027,7 @@ export default function OfficeFPV3D() {
           </span>
         </div>
 
-        {/* Corridor Waypoint Navigation */}
+        {/* Corridor Waypoint Navigation with Security Access Indicators */}
         <nav className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs font-mono">
           <button
             onClick={() => handleHeaderNav("LOBBY")}
@@ -2030,50 +2040,37 @@ export default function OfficeFPV3D() {
           >
             LOBBY
           </button>
-          <button
-            onClick={() => handleHeaderNav("ROOM_1")}
-            disabled={isWalking}
-            className={`px-3 py-1.5 rounded transition-all border ${
-              location === "CORRIDOR_1" || location === "INSIDE_1"
-                ? "bg-stone-900 text-stone-100 font-bold border-stone-900 shadow-sm"
-                : "text-stone-700 hover:text-stone-900 border-transparent hover:border-stone-400"
-            } ${isWalking ? "cursor-wait opacity-60" : "cursor-pointer"}`}
-          >
-            ABOUT
-          </button>
-          <button
-            onClick={() => handleHeaderNav("ROOM_2")}
-            disabled={isWalking}
-            className={`px-3 py-1.5 rounded transition-all border ${
-              location === "CORRIDOR_2" || location === "INSIDE_2"
-                ? "bg-stone-900 text-stone-100 font-bold border-stone-900 shadow-sm"
-                : "text-stone-700 hover:text-stone-900 border-transparent hover:border-stone-400"
-            } ${isWalking ? "cursor-wait opacity-60" : "cursor-pointer"}`}
-          >
-            PROJECTS
-          </button>
-          <button
-            onClick={() => handleHeaderNav("ROOM_3")}
-            disabled={isWalking}
-            className={`px-3 py-1.5 rounded transition-all border ${
-              location === "CORRIDOR_3" || location === "INSIDE_3"
-                ? "bg-stone-900 text-stone-100 font-bold border-stone-900 shadow-sm"
-                : "text-stone-700 hover:text-stone-900 border-transparent hover:border-stone-400"
-            } ${isWalking ? "cursor-wait opacity-60" : "cursor-pointer"}`}
-          >
-            STACK
-          </button>
-          <button
-            onClick={() => handleHeaderNav("ROOM_4")}
-            disabled={isWalking}
-            className={`px-3 py-1.5 rounded transition-all border ${
-              location === "CORRIDOR_4" || location === "INSIDE_4"
-                ? "bg-stone-900 text-stone-100 font-bold border-stone-900 shadow-sm"
-                : "text-stone-700 hover:text-stone-900 border-transparent hover:border-stone-400"
-            } ${isWalking ? "cursor-wait opacity-60" : "cursor-pointer"}`}
-          >
-            CONTACT
-          </button>
+          {[
+            { id: "ROOM_1" as const, label: "ABOUT", locs: ["CORRIDOR_1", "INSIDE_1"] },
+            { id: "ROOM_2" as const, label: "PROJECTS", locs: ["CORRIDOR_2", "INSIDE_2"] },
+            { id: "ROOM_3" as const, label: "STACK", locs: ["CORRIDOR_3", "INSIDE_3"] },
+            { id: "ROOM_4" as const, label: "CONTACT", locs: ["CORRIDOR_4", "INSIDE_4"] },
+          ].map(({ id, label, locs }) => {
+            const isLocked = location === "LOBBY" && !nfcAccessGranted;
+            const isActive = locs.includes(location);
+            return (
+              <button
+                key={id}
+                onClick={() => handleHeaderNav(id)}
+                disabled={isWalking}
+                title={isLocked ? "Scan visitor pass at the door to unlock" : undefined}
+                className={`px-3 py-1.5 rounded transition-all border flex items-center gap-1.5 ${
+                  isActive
+                    ? "bg-stone-900 text-stone-100 font-bold border-stone-900 shadow-sm"
+                    : isLocked
+                    ? "text-stone-400 border-transparent hover:border-stone-400 hover:text-stone-600 cursor-pointer"
+                    : "text-stone-700 hover:text-stone-900 border-transparent hover:border-stone-400 cursor-pointer"
+                } ${isWalking ? "cursor-wait opacity-60" : ""}`}
+              >
+                <span>{label}</span>
+                {isLocked && (
+                  <span className="text-[10px] opacity-60" title="Locked">
+                    🔒
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </nav>
       </header>
 
