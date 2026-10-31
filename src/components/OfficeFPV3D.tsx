@@ -1040,31 +1040,55 @@ export default function OfficeFPV3D() {
 
       doorHinge.add(handleGroup);
 
-      // Matte Architectural Dark Bronze Door Plaque with Burnt Orange Accent
+      // High-Visibility Architectural Door Plaque / Transom Banner
+      const isEntrance = nameKey === "entrance";
+      const pWidth = isEntrance ? 0.98 : 0.84;
+      const pHeight = isEntrance ? 0.30 : 0.24;
+
       const pCanvas = document.createElement("canvas");
-      pCanvas.width = 512;
-      pCanvas.height = 128;
+      pCanvas.width = 1024;
+      pCanvas.height = Math.round(1024 * (pHeight / pWidth));
       const pCtx = pCanvas.getContext("2d")!;
-      pCtx.fillStyle = "#1c1917";
-      pCtx.fillRect(0, 0, 512, 128);
-      pCtx.strokeStyle = "#c2410c";
-      pCtx.lineWidth = 4;
-      pCtx.strokeRect(4, 4, 504, 120);
 
-      pCtx.fillStyle = "#f5f5f4";
-      pCtx.font = "bold 28px 'Space Grotesk', sans-serif";
-      pCtx.fillText(plaqueText, 24, 52);
+      // Deep Charcoal Architectural Bronze Plaque Backing
+      pCtx.fillStyle = "#141312";
+      pCtx.fillRect(0, 0, pCanvas.width, pCanvas.height);
 
-      pCtx.fillStyle = "#ea580c";
-      pCtx.font = "bold 20px 'JetBrains Mono', monospace";
-      pCtx.fillText(subText, 24, 95);
+      // Burnt Orange Geometric Accent Border
+      pCtx.strokeStyle = "#ea580c";
+      pCtx.lineWidth = isEntrance ? 10 : 8;
+      pCtx.strokeRect(8, 8, pCanvas.width - 16, pCanvas.height - 16);
+
+      // Main Header Text (Crisp Pure White)
+      pCtx.fillStyle = "#ffffff";
+      pCtx.font = isEntrance
+        ? "bold 68px 'Space Grotesk', -apple-system, sans-serif"
+        : "bold 58px 'Space Grotesk', -apple-system, sans-serif";
+      pCtx.fillText(plaqueText, 40, isEntrance ? 122 : 104);
+
+      // Subtitle / Designation (Vibrant High-Contrast Orange)
+      pCtx.fillStyle = "#fb923c";
+      pCtx.font = isEntrance
+        ? "bold 36px 'JetBrains Mono', monospace"
+        : "bold 30px 'JetBrains Mono', monospace";
+      pCtx.fillText(subText, 40, isEntrance ? 212 : 184);
 
       const pTex = new THREE.CanvasTexture(pCanvas);
-      const pGeo = new THREE.PlaneGeometry(0.65, 0.16);
+      pTex.generateMipmaps = true;
+      pTex.minFilter = THREE.LinearMipmapLinearFilter;
+      const pGeo = new THREE.PlaneGeometry(pWidth, pHeight);
       const pMat = new THREE.MeshBasicMaterial({ map: pTex });
+
+      // Front facing plaque (eye level at Y = 1.72m)
       const plaqueMesh = new THREE.Mesh(pGeo, pMat);
-      plaqueMesh.position.set(doorW / 2, doorH * 0.74, doorThick / 2 + 0.005);
+      plaqueMesh.position.set(doorW / 2, 1.72, doorThick / 2 + 0.005);
       doorHinge.add(plaqueMesh);
+
+      // Back facing plaque (visible when looking back from inside)
+      const plaqueBack = new THREE.Mesh(pGeo, pMat);
+      plaqueBack.position.set(doorW / 2, 1.72, -doorThick / 2 - 0.005);
+      plaqueBack.rotation.y = Math.PI;
+      doorHinge.add(plaqueBack);
 
       scene.add(doorHinge);
       doorsRef.current[nameKey] = { group: doorHinge, baseY: baseRotationY };
