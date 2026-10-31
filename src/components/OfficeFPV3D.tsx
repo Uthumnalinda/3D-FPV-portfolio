@@ -99,6 +99,18 @@ export default function OfficeFPV3D() {
   const [formState, setFormState] = useState({ name: "", email: "", message: "" });
   const [sentSuccess, setSentSuccess] = useState(false);
 
+  // NFC Keycard Drag-and-Drop states (Lobby entrance exclusive)
+  const [cardOffset, setCardOffset] = useState({ x: 0, y: 0 });
+  const [isDraggingCard, setIsDraggingCard] = useState(false);
+  const [nfcAccessGranted, setNfcAccessGranted] = useState(false);
+  const [cardHintDenied, setCardHintDenied] = useState(false);
+  const [projectedNfcTarget, setProjectedNfcTarget] = useState<{ x: number; y: number } | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef<{ mouseX: number; mouseY: number; startX: number; startY: number } | null>(null);
+  const nfcLedMeshRef = useRef<THREE.Mesh | null>(null);
+  const nfcReaderPos3D = useRef(new THREE.Vector3(0.74, 1.35, 0.08));
+  const projectedPosRef = useRef<{ x: number; y: number } | null>(null);
+
   // References for Three.js state
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -338,12 +350,168 @@ export default function OfficeFPV3D() {
     [navigateTo]
   );
 
+  // Helper to project 3D NFC reader position to 2D screen coordinates
+  const getProjectedNfcPos = useCallback(() => {
+    if (!cameraRef.current) return null;
+    const v = nfcReaderPos3D.current.clone();
+    v.project(cameraRef.current);
+    if (v.z >= 1) return null;
+    return {
+      x: (v.x * 0.5 + 0.5) * window.innerWidth,
+      y: (-(v.y * 0.5) + 0.5) * window.innerHeight,
+    };
+  }, []);
+
+  // Trigger NFC Keycard Authentication & Unlock Sequence
+  const triggerNfcUnlock = useCallback(
+    (explicitTarget?: { x: number; y: number }) => {
+      if (isWalkingRef.current || nfcAccessGranted) return;
+      setNfcAccessGranted(true);
+
+      const target = explicitTarget || getProjectedNfcPos();
+      if (target && cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        const currentCenterX = rect.left + rect.width / 2;
+        const currentCenterY = rect.top + rect.height / 2;
+        setCardOffset((prev) => ({
+          x: prev.x + (target.x - currentCenterX),
+          y: prev.y + (target.y - currentCenterY),
+        }));
+      }
+
+      // Switch 3D reader LED to emerald green
+      if (nfcLedMeshRef.current) {
+        (nfcLedMeshRef.current.material as THREE.MeshBasicMaterial).color.setHex(0x10b981);
+      }
+
+      // High-tech security badge authentication chime via Web Audio API
+      try {
+        const audioCtx = new (window.AudioContext ||
+          (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1760, audioCtx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.2);
+      } catch {
+        // Fallback if browser audio policy blocks initial sound
+      }
+
+      // Smoothly unlock and walk through
+      setTimeout(() => {
+        navigateTo("CORRIDOR_1");
+        setTimeout(() => {
+          setNfcAccessGranted(false);
+          setCardOffset({ x: 0, y: 0 });
+          if (nfcLedMeshRef.current) {
+            (nfcLedMeshRef.current.material as THREE.MeshBasicMaterial).color.setHex(0xef4444);
+          }
+        }, 1600);
+      }, 700);
+    },
+    [getProjectedNfcPos, navigateTo, nfcAccessGranted]
+  );
+
+  // Denial Feedback when clicking instead of dragging
+  const showDeniedHint = useCallback(() => {
+    setCardHintDenied(true);
+    // Electronic access denied low beep
+    try {
+      const audioCtx = new (window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(190, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.18);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.18);
+    } catch {
+      // Audio policy fallback
+    }
+    setTimeout(() => setCardHintDenied(false), 2400);
+  }, []);
+
+  // Drag-and-Drop Handlers for the Floating NFC Card
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    if (nfcAccessGranted || isWalking) return;
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    setIsDraggingCard(true);
+    dragStartRef.current = {
+      mouseX: clientX,
+      mouseY: clientY,
+      startX: cardOffset.x,
+      startY: cardOffset.y,
+    };
+  };
+
+  useEffect(() => {
+    if (!isDraggingCard) return;
+
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      if (!dragStartRef.current) return;
+      const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+      const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+      const dx = clientX - dragStartRef.current.mouseX;
+      const dy = clientY - dragStartRef.current.mouseY;
+      const newX = dragStartRef.current.startX + dx;
+      const newY = dragStartRef.current.startY + dy;
+      setCardOffset({ x: newX, y: newY });
+    };
+
+    const handleEnd = () => {
+      if (!isDraggingCard) return;
+      setIsDraggingCard(false);
+      dragStartRef.current = null;
+
+      // STRICT DRAG & DROP CHECK: Must drop the card directly on the wall scanner
+      const target = projectedPosRef.current || getProjectedNfcPos();
+      if (target && cardRef.current) {
+        const rect = cardRef.current.getBoundingClientRect();
+        const cardCenterX = rect.left + rect.width / 2;
+        const cardCenterY = rect.top + rect.height / 2;
+        const dist = Math.hypot(cardCenterX - target.x, cardCenterY - target.y);
+        if (dist < 140) {
+          triggerNfcUnlock(target);
+          return;
+        }
+      }
+
+      // If dropped elsewhere or just clicked without dragging to scanner, spring back and prompt
+      setCardOffset({ x: 0, y: 0 });
+    };
+
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleEnd);
+    window.addEventListener("touchmove", handleMove);
+    window.addEventListener("touchend", handleEnd);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleEnd);
+      window.removeEventListener("touchmove", handleMove);
+      window.removeEventListener("touchend", handleEnd);
+    };
+  }, [isDraggingCard, triggerNfcUnlock, getProjectedNfcPos]);
+
   // ==========================================
   // THREE.JS SCENE CREATION & ACTION DISPATCHER
   // ==========================================
   const actionsRef = useRef({
     navigateTo,
-    enterLabFromLobby: () => navigateTo("CORRIDOR_1"),
+    triggerNfcUnlock,
+    showDeniedHint,
+    enterLabFromLobby: () => showDeniedHint(),
     enterRoom1: () => navigateTo("ROOM_1"),
     exitRoom1ToCorridor2: () => navigateTo("ROOM_2"),
     enterRoom2: () => navigateTo("ROOM_2"),
@@ -355,7 +523,9 @@ export default function OfficeFPV3D() {
   });
   actionsRef.current = {
     navigateTo,
-    enterLabFromLobby: () => navigateTo("CORRIDOR_1"),
+    triggerNfcUnlock,
+    showDeniedHint,
+    enterLabFromLobby: () => showDeniedHint(),
     enterRoom1: () => navigateTo("ROOM_1"),
     exitRoom1ToCorridor2: () => navigateTo("ROOM_2"),
     enterRoom2: () => navigateTo("ROOM_2"),
@@ -907,6 +1077,74 @@ export default function OfficeFPV3D() {
     lobbyLight.position.set(0, 2.9, 2.2);
     scene.add(lobbyLight);
 
+    // 3D NFC RFID Keycard Wall Terminal (Right of entrance door at x = 0.74, y = 1.35, z = 0.08)
+    const nfcGroup = new THREE.Group();
+    nfcGroup.position.copy(nfcReaderPos3D.current);
+
+    // Beveled Matte Black Terminal Housing
+    const nfcBody = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.18, 0.03),
+      new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.35, metalness: 0.6 })
+    );
+    nfcGroup.add(nfcBody);
+
+    // Faceplate canvas with NFC waves and instructions
+    const nfcCanvas = document.createElement("canvas");
+    nfcCanvas.width = 256;
+    nfcCanvas.height = 384;
+    const nfcCtx = nfcCanvas.getContext("2d")!;
+    nfcCtx.fillStyle = "#0a0a0c";
+    nfcCtx.fillRect(0, 0, 256, 384);
+    nfcCtx.strokeStyle = "#3f3f46";
+    nfcCtx.lineWidth = 4;
+    nfcCtx.strokeRect(4, 4, 248, 376);
+
+    // RFID / NFC Wave Icon
+    nfcCtx.fillStyle = "#ffffff";
+    nfcCtx.beginPath();
+    nfcCtx.arc(128, 160, 20, 0, Math.PI * 2);
+    nfcCtx.fill();
+    nfcCtx.strokeStyle = "#ea580c";
+    nfcCtx.lineWidth = 7;
+    nfcCtx.beginPath();
+    nfcCtx.arc(128, 160, 48, -Math.PI * 0.45, Math.PI * 0.45);
+    nfcCtx.stroke();
+    nfcCtx.beginPath();
+    nfcCtx.arc(128, 160, 74, -Math.PI * 0.45, Math.PI * 0.45);
+    nfcCtx.stroke();
+
+    nfcCtx.fillStyle = "#f5f5f4";
+    nfcCtx.font = "bold 26px 'Space Grotesk', sans-serif";
+    nfcCtx.textAlign = "center";
+    nfcCtx.fillText("NFC ACCESS", 128, 280);
+    nfcCtx.font = "bold 20px 'JetBrains Mono', monospace";
+    nfcCtx.fillStyle = "#fb923c";
+    nfcCtx.fillText("TAP BADGE", 128, 325);
+
+    const nfcTex = new THREE.CanvasTexture(nfcCanvas);
+    const nfcFace = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.105, 0.165),
+      new THREE.MeshBasicMaterial({ map: nfcTex })
+    );
+    nfcFace.position.set(0, -0.003, 0.016);
+    nfcGroup.add(nfcFace);
+
+    // Illuminated Status LED Bar (Red when locked, Green when granted)
+    const ledGeo = new THREE.BoxGeometry(0.08, 0.012, 0.012);
+    const ledMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+    const nfcLed = new THREE.Mesh(ledGeo, ledMat);
+    nfcLed.position.set(0, 0.076, 0.018);
+    nfcGroup.add(nfcLed);
+    nfcLedMeshRef.current = nfcLed;
+
+    scene.add(nfcGroup);
+
+    // Clicking terminal in 3D prompts the user to drag the card
+    clickablesRef.current.push({
+      mesh: nfcFace,
+      action: () => actionsRef.current.showDeniedHint(),
+    });
+
     // --- B. CENTRAL CORRIDOR GLASS PARTITION WALLS (x = -1.2 and x = 1.2) ---
     // Corridor Left Glass Wall (x = -1.2)
     buildGlassWall(-1.2, corridorHeight / 2, -0.95, 0.04, corridorHeight, 1.9); // z: 0 to -1.9
@@ -1098,7 +1336,11 @@ export default function OfficeFPV3D() {
 
     // 1. Entrance Door (Hinged at left jamb x = -0.57, z = 0, baseY = 0)
     create3DDoor("entrance", [-0.57, 0, 0], 0, "UTHUM NALINDA", "SOFTWARE & SECURITY LAB", () => {
-      actionsRef.current.navigateTo(currentCamPos.current.z > 0.8 ? "CORRIDOR_1" : "LOBBY");
+      if (currentCamPos.current.z > 0.8) {
+        actionsRef.current.showDeniedHint();
+      } else {
+        actionsRef.current.navigateTo("LOBBY");
+      }
     });
 
     // 2. Door 1 (Hinged at left jamb x = -1.2, z = -1.93, baseY = Math.PI / 2)
@@ -1521,6 +1763,18 @@ export default function OfficeFPV3D() {
       renderer.render(scene, camera);
     };
 
+    const updateNfcProjection = () => {
+      const v = nfcReaderPos3D.current.clone();
+      v.project(camera);
+      if (v.z < 1) {
+        const sx = (v.x * 0.5 + 0.5) * window.innerWidth;
+        const sy = (-(v.y * 0.5) + 0.5) * window.innerHeight;
+        projectedPosRef.current = { x: sx, y: sy };
+        setProjectedNfcTarget({ x: sx, y: sy });
+      }
+    };
+    updateNfcProjection();
+
     animate();
 
     const handleResize = () => {
@@ -1530,6 +1784,7 @@ export default function OfficeFPV3D() {
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      updateNfcProjection();
     };
 
     window.addEventListener("resize", handleResize);
@@ -1969,6 +2224,133 @@ export default function OfficeFPV3D() {
       )}
 
       {/* ============================================================
+          LOBBY EXCLUSIVE: 3D NFC SCANNER DROP TARGET INDICATOR
+         ============================================================ */}
+      {location === "LOBBY" && !isWalking && projectedNfcTarget && !nfcAccessGranted && (
+        <div
+          style={{
+            left: `${projectedNfcTarget.x}px`,
+            top: `${projectedNfcTarget.y}px`,
+            transform: "translate(-50%, -50%)",
+          }}
+          className="fixed pointer-events-none z-30 flex flex-col items-center"
+        >
+          <div className="w-16 h-16 rounded-full border-2 border-orange-500/70 bg-orange-500/10 animate-ping absolute" />
+          <div className="w-10 h-10 rounded-full border-2 border-orange-500 bg-stone-900/90 flex items-center justify-center shadow-lg">
+            <span className="text-[9px] font-mono text-orange-400 font-bold">NFC</span>
+          </div>
+          <span className="mt-2 text-[9px] font-mono font-bold px-2 py-0.5 bg-stone-900/90 text-orange-300 border border-orange-500/50 rounded shadow whitespace-nowrap">
+            DROP CARD HERE ↘
+          </span>
+        </div>
+      )}
+
+      {/* ============================================================
+          LOBBY EXCLUSIVE: DRAGGABLE SECURITY ACCESS BADGE
+         ============================================================ */}
+      {location === "LOBBY" && !isWalking && (
+        <div
+          ref={cardRef}
+          style={{
+            transform: `translate(${cardOffset.x}px, ${cardOffset.y}px)`,
+          }}
+          className={`fixed bottom-24 right-4 sm:right-10 z-40 transition-transform ${
+            isDraggingCard ? "cursor-grabbing scale-105 duration-0" : "cursor-grab duration-300 hover:scale-102"
+          } select-none touch-none`}
+          onMouseDown={handleDragStart}
+          onTouchStart={handleDragStart}
+          onClick={() => {
+            if (!isDraggingCard && cardOffset.x === 0 && cardOffset.y === 0) {
+              showDeniedHint();
+            }
+          }}
+        >
+          {/* Acrylic Glass Access Card */}
+          <div
+            className={`w-72 sm:w-80 rounded-2xl border-2 transition-all p-4 shadow-2xl relative overflow-hidden backdrop-blur-md ${
+              nfcAccessGranted
+                ? "bg-emerald-950/90 border-emerald-500 shadow-emerald-500/40"
+                : cardHintDenied
+                ? "bg-rose-950/90 border-rose-500 shadow-rose-500/40 animate-bounce"
+                : "bg-stone-900/90 border-orange-500 shadow-orange-500/20"
+            }`}
+          >
+            {/* Lanyard Slot */}
+            <div className="w-12 h-1.5 mx-auto mb-3 bg-stone-700/80 rounded-full" />
+
+            {/* Card Header & Chip */}
+            <div className="flex items-center justify-between border-b border-stone-800 pb-2.5">
+              <div className="flex items-center gap-2">
+                <span
+                  className={`w-2.5 h-2.5 rounded-full ${
+                    nfcAccessGranted ? "bg-emerald-400 animate-pulse" : "bg-orange-500"
+                  }`}
+                />
+                <span className="font-mono text-[11px] font-bold tracking-wider text-stone-200">
+                  SECURITY CREDENTIAL
+                </span>
+              </div>
+              <span className="font-mono text-[10px] px-2 py-0.5 rounded border border-orange-500/60 text-orange-400 bg-orange-500/10 font-bold">
+                LEVEL 01
+              </span>
+            </div>
+
+            {/* Smart Chip & NFC Symbol */}
+            <div className="flex items-center justify-between my-3">
+              <div className="w-9 h-7 rounded border border-amber-600/80 bg-gradient-to-br from-amber-400/30 to-amber-600/10 flex flex-col justify-around p-1">
+                <div className="w-full h-0.5 bg-amber-400/40" />
+                <div className="w-full h-0.5 bg-amber-400/40" />
+              </div>
+              <div className="font-mono text-[11px] text-stone-400 font-semibold tracking-widest flex items-center gap-1.5">
+                <span>RFID // NFC</span>
+                <span className="text-orange-400 font-bold">((( • )))</span>
+              </div>
+            </div>
+
+            {/* Holder Information */}
+            <div className="space-y-0.5">
+              <div className="font-display font-extrabold text-stone-100 text-lg tracking-wide">
+                UTHUM NALINDA
+              </div>
+              <div className="font-mono text-[11px] font-bold text-orange-400 uppercase">
+                Software & Security Lab
+              </div>
+            </div>
+
+            {/* Interactive Status Footer */}
+            <div
+              className={`mt-3.5 pt-2 border-t font-mono text-[10px] font-bold flex items-center justify-between ${
+                nfcAccessGranted
+                  ? "border-emerald-700 text-emerald-300"
+                  : "border-stone-800 text-stone-400"
+              }`}
+            >
+              <span>
+                {nfcAccessGranted
+                  ? "✓ ACCESS GRANTED"
+                  : cardHintDenied
+                  ? "⚠️ MUST DRAG & DROP ONTO SCANNER!"
+                  : isDraggingCard
+                  ? "RELEASE ON SCANNER TO UNLOCK"
+                  : "DRAG & DROP TO WALL SCANNER"}
+              </span>
+              <span
+                className={`font-bold ${
+                  nfcAccessGranted
+                    ? "text-emerald-400"
+                    : cardHintDenied
+                    ? "text-rose-400"
+                    : "text-orange-400"
+                }`}
+              >
+                {nfcAccessGranted ? "UNLOCKED" : cardHintDenied ? "DENIED" : "DRAG ↗"}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ============================================================
           BOTTOM INTERACTIVE CONTROLLER (DIRECT FREE NAVIGATION)
          ============================================================ */}
       <footer className="absolute bottom-0 inset-x-0 z-40 px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-3 border-t-2 border-stone-800 bg-[#fbf9f4]/95 backdrop-blur-md font-mono text-xs">
@@ -2029,6 +2411,8 @@ export default function OfficeFPV3D() {
           <div className="text-[10px] text-stone-600 mt-0.5">
             {isWalking
               ? "WALKING THROUGH CORRIDOR..."
+              : location === "LOBBY"
+              ? "DRAG THE ACCESS BADGE TO THE WALL SCANNER TO UNLOCK"
               : "CLICK ANY DOOR IN 3D TO ENTER DIRECTLY, OR USE CONTROLS"}
           </div>
         </div>
@@ -2037,13 +2421,23 @@ export default function OfficeFPV3D() {
         <div className="flex items-center gap-2">
           {location === "LOBBY" && (
             <button
-              onClick={() => navigateTo("CORRIDOR_1")}
-              disabled={isWalking}
-              className={`px-5 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${
-                isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
+              onClick={showDeniedHint}
+              disabled={isWalking || nfcAccessGranted}
+              className={`px-5 py-2 border-2 border-stone-800 font-bold transition-all ${
+                nfcAccessGranted
+                  ? "bg-emerald-600 text-white border-emerald-500 shadow-sm"
+                  : cardHintDenied
+                  ? "bg-rose-900 text-rose-100 border-rose-600 animate-pulse cursor-pointer"
+                  : "bg-stone-900 text-stone-300 hover:bg-stone-800 cursor-pointer shadow-sm"
               }`}
             >
-              {isWalking ? "WALKING..." : "ENTER OFFICE CORRIDOR →"}
+              {isWalking
+                ? "WALKING..."
+                : nfcAccessGranted
+                ? "ACCESS GRANTED..."
+                : cardHintDenied
+                ? "⚠️ MUST DRAG & DROP CARD TO ENTER"
+                : "🔒 DOOR LOCKED // DRAG CARD TO SCANNER"}
             </button>
           )}
 
