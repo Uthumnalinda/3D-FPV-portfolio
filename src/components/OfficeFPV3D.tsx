@@ -243,20 +243,56 @@ export default function OfficeFPV3D() {
         });
       }
 
-      // TARGET A: Return to Lobby
+      // TARGET A: Return to Lobby with Animated Door Entry
       if (target === "LOBBY") {
+        if (isInLobby) {
+          queue.push({
+            pos: new THREE.Vector3(0, 1.6, 2.5),
+            look: new THREE.Vector3(0, 1.6, 0),
+            duration: 400,
+          });
+          runSequence(queue, "LOBBY");
+          return;
+        }
+
+        // 1. Walk down corridor towards the entrance door threshold (z = -0.9)
+        const walkDistToDoor = Math.abs(curPos.z - (-0.9));
         queue.push({
-          pos: new THREE.Vector3(0, 1.6, 2.5),
-          look: new THREE.Vector3(0, 1.6, 0),
-          duration: Math.max(900, Math.min(2200, Math.abs(curPos.z - 2.5) * 110)),
+          pos: new THREE.Vector3(0, 1.6, -0.9),
+          look: new THREE.Vector3(0, 1.6, 2.5),
+          duration: Math.max(650, Math.min(1800, walkDistToDoor * 130)),
           onStart: () => {
             setDoorOpen("door1", false);
             setDoorOpen("door2", false);
             setDoorOpen("door3", false);
             setDoorOpen("door4", false);
-            setDoorOpen("entrance", false);
           },
         });
+
+        // 2. Entrance glass door swings open to let you into the lobby
+        queue.push({
+          pos: new THREE.Vector3(0, 1.6, -0.9),
+          look: new THREE.Vector3(0, 1.6, 2.5),
+          duration: 180,
+          onStart: () => setDoorOpen("entrance", true, -Math.PI / 2.15),
+          pauseAfter: 500,
+        });
+
+        // 3. Walk through the open doorway into the lobby
+        queue.push({
+          pos: new THREE.Vector3(0, 1.6, 2.5),
+          look: new THREE.Vector3(0, 1.6, 4.0),
+          duration: 1050,
+        });
+
+        // 4. Turn around in the lobby to face the entrance & console, and smoothly close the door
+        queue.push({
+          pos: new THREE.Vector3(0, 1.6, 2.5),
+          look: new THREE.Vector3(0, 1.6, 0),
+          duration: 600,
+          onStart: () => setDoorOpen("entrance", false),
+        });
+
         runSequence(queue, "LOBBY");
         return;
       }
