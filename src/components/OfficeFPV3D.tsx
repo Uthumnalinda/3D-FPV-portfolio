@@ -93,6 +93,7 @@ export default function OfficeFPV3D() {
   const mountRef = useRef<HTMLDivElement>(null);
   const [location, setLocation] = useState<LocationState>("LOBBY");
   const [isWalking, setIsWalking] = useState(false);
+  const isWalkingRef = useRef(false);
   const [activeModal, setActiveModal] = useState<ModalType>(null);
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [formState, setFormState] = useState({ name: "", email: "", message: "" });
@@ -141,6 +142,7 @@ export default function OfficeFPV3D() {
   // Dispatch Waypoint Sequence
   const runSequence = useCallback((queue: Waypoint[], nextLoc: LocationState) => {
     setActiveModal(null);
+    isWalkingRef.current = true;
     setIsWalking(true);
     waypointQueue.current = queue;
     setLocation(nextLoc);
@@ -150,7 +152,7 @@ export default function OfficeFPV3D() {
 
   // 1. Enter Lab from Lobby
   const enterLabFromLobby = useCallback(() => {
-    if (isWalking) return;
+    if (isWalkingRef.current) return;
     const queue: Waypoint[] = [
       // Swing Entrance door open
       {
@@ -158,27 +160,27 @@ export default function OfficeFPV3D() {
         look: new THREE.Vector3(0, 1.6, 0),
         duration: 200,
         onStart: () => setDoorOpen("entrance", true, -Math.PI / 2.15),
-        pauseAfter: 750, // Let door open fully
+        pauseAfter: 650, // Let door open fully
       },
       // Walk through open entrance door into corridor to Door 01
       {
         pos: new THREE.Vector3(0, 1.6, -2.5),
         look: new THREE.Vector3(0, 1.6, -6.0),
-        duration: 2000,
+        duration: 1800,
       },
       // Turn left to face closed Door 01
       {
         pos: new THREE.Vector3(0, 1.6, -2.5),
         look: new THREE.Vector3(-2.4, 1.6, -2.5),
-        duration: 800,
+        duration: 700,
       },
     ];
     runSequence(queue, "CORRIDOR_1");
-  }, [isWalking, runSequence, setDoorOpen]);
+  }, [runSequence, setDoorOpen]);
 
   // 2. Open Door 01 & Enter Room 01 (About Me)
   const enterRoom1 = useCallback(() => {
-    if (isWalking) return;
+    if (isWalkingRef.current) return;
     const queue: Waypoint[] = [
       // Swing Door 01 open into Room 1
       {
@@ -186,196 +188,201 @@ export default function OfficeFPV3D() {
         look: new THREE.Vector3(-2.4, 1.6, -2.5),
         duration: 200,
         onStart: () => setDoorOpen("door1", true, Math.PI / 2.15),
-        pauseAfter: 700,
+        pauseAfter: 600,
       },
       // Walk inside Room 1 facing the exhibition wall
       {
         pos: new THREE.Vector3(-1.9, 1.6, -2.5),
         look: new THREE.Vector3(-4.72, 1.6, -2.5),
-        duration: 1200,
+        duration: 1100,
       },
     ];
     runSequence(queue, "INSIDE_1");
-  }, [isWalking, runSequence, setDoorOpen]);
+  }, [runSequence, setDoorOpen]);
 
   // 3. Exit Room 01 & Walk to Door 02 (Selected Systems)
   const exitRoom1ToCorridor2 = useCallback(() => {
-    if (isWalking) return;
+    if (isWalkingRef.current) return;
     const queue: Waypoint[] = [
       // Step back out to corridor center
       {
         pos: new THREE.Vector3(0, 1.6, -2.5),
         look: new THREE.Vector3(-4.72, 1.6, -2.5),
-        duration: 900,
-        onStart: () => setDoorOpen("door1", false), // Close door 1 behind you
+        duration: 800,
+        onStart: () => setDoorOpen("door1", false),
       },
       // Turn to face down corridor
       {
         pos: new THREE.Vector3(0, 1.6, -2.5),
         look: new THREE.Vector3(0, 1.6, -6.5),
-        duration: 700,
+        duration: 600,
       },
       // Walk down corridor to Door 02
       {
         pos: new THREE.Vector3(0, 1.6, -6.5),
         look: new THREE.Vector3(0, 1.6, -10.0),
-        duration: 1700,
+        duration: 1500,
       },
       // Turn right to face closed Door 02
       {
         pos: new THREE.Vector3(0, 1.6, -6.5),
         look: new THREE.Vector3(2.4, 1.6, -6.5),
-        duration: 800,
+        duration: 700,
       },
     ];
     runSequence(queue, "CORRIDOR_2");
-  }, [isWalking, runSequence, setDoorOpen]);
+  }, [runSequence, setDoorOpen]);
 
   // 4. Open Door 02 & Enter Room 02 (Selected Systems)
   const enterRoom2 = useCallback(() => {
-    if (isWalking) return;
+    if (isWalkingRef.current) return;
     const queue: Waypoint[] = [
-      // Swing Door 02 open into Room 2
       {
         pos: new THREE.Vector3(0, 1.6, -6.5),
         look: new THREE.Vector3(2.4, 1.6, -6.5),
         duration: 200,
         onStart: () => setDoorOpen("door2", true, Math.PI / 2.15),
-        pauseAfter: 700,
+        pauseAfter: 600,
       },
-      // Walk inside Room 2 facing the 3 project boards
       {
         pos: new THREE.Vector3(1.9, 1.6, -6.5),
         look: new THREE.Vector3(5.12, 1.6, -6.5),
-        duration: 1200,
+        duration: 1100,
       },
     ];
     runSequence(queue, "INSIDE_2");
-  }, [isWalking, runSequence, setDoorOpen]);
+  }, [runSequence, setDoorOpen]);
 
   // 5. Exit Room 02 & Walk to Door 03 (Arsenal)
   const exitRoom2ToCorridor3 = useCallback(() => {
-    if (isWalking) return;
+    if (isWalkingRef.current) return;
     const queue: Waypoint[] = [
-      // Step back out to corridor center
       {
         pos: new THREE.Vector3(0, 1.6, -6.5),
         look: new THREE.Vector3(5.12, 1.6, -6.5),
-        duration: 900,
-        onStart: () => setDoorOpen("door2", false), // Close door 2
+        duration: 800,
+        onStart: () => setDoorOpen("door2", false),
       },
-      // Turn to face down corridor
       {
         pos: new THREE.Vector3(0, 1.6, -6.5),
         look: new THREE.Vector3(0, 1.6, -10.5),
-        duration: 700,
+        duration: 600,
       },
-      // Walk down corridor to Door 03
       {
         pos: new THREE.Vector3(0, 1.6, -10.5),
         look: new THREE.Vector3(0, 1.6, -14.0),
-        duration: 1700,
+        duration: 1500,
       },
-      // Turn left to face closed Door 03
       {
         pos: new THREE.Vector3(0, 1.6, -10.5),
         look: new THREE.Vector3(-2.4, 1.6, -10.5),
-        duration: 800,
+        duration: 700,
       },
     ];
     runSequence(queue, "CORRIDOR_3");
-  }, [isWalking, runSequence, setDoorOpen]);
+  }, [runSequence, setDoorOpen]);
 
   // 6. Open Door 03 & Enter Room 03 (Technical Arsenal)
   const enterRoom3 = useCallback(() => {
-    if (isWalking) return;
+    if (isWalkingRef.current) return;
     const queue: Waypoint[] = [
       {
         pos: new THREE.Vector3(0, 1.6, -10.5),
         look: new THREE.Vector3(-2.4, 1.6, -10.5),
         duration: 200,
         onStart: () => setDoorOpen("door3", true, Math.PI / 2.15),
-        pauseAfter: 700,
+        pauseAfter: 600,
       },
       {
         pos: new THREE.Vector3(-1.9, 1.6, -10.5),
         look: new THREE.Vector3(-4.72, 1.6, -10.5),
-        duration: 1200,
+        duration: 1100,
       },
     ];
     runSequence(queue, "INSIDE_3");
-  }, [isWalking, runSequence, setDoorOpen]);
+  }, [runSequence, setDoorOpen]);
 
   // 7. Exit Room 03 & Walk to Door 04 (Contact Desk)
   const exitRoom3ToCorridor4 = useCallback(() => {
-    if (isWalking) return;
+    if (isWalkingRef.current) return;
     const queue: Waypoint[] = [
       {
         pos: new THREE.Vector3(0, 1.6, -10.5),
         look: new THREE.Vector3(-4.72, 1.6, -10.5),
-        duration: 900,
+        duration: 800,
         onStart: () => setDoorOpen("door3", false),
       },
       {
         pos: new THREE.Vector3(0, 1.6, -10.5),
         look: new THREE.Vector3(0, 1.6, -16.0),
-        duration: 700,
+        duration: 600,
       },
       {
         pos: new THREE.Vector3(0, 1.6, -16.0),
         look: new THREE.Vector3(0, 1.6, -17.5),
-        duration: 1800,
+        duration: 1500,
       },
     ];
     runSequence(queue, "CORRIDOR_4");
-  }, [isWalking, runSequence, setDoorOpen]);
+  }, [runSequence, setDoorOpen]);
 
   // 8. Open Door 04 & Enter Room 04 (Contact Drafting Desk)
   const enterRoom4 = useCallback(() => {
-    if (isWalking) return;
+    if (isWalkingRef.current) return;
     const queue: Waypoint[] = [
       {
         pos: new THREE.Vector3(0, 1.6, -16.0),
         look: new THREE.Vector3(0, 1.6, -17.5),
         duration: 200,
         onStart: () => setDoorOpen("door4", true, -Math.PI / 2.15),
-        pauseAfter: 700,
+        pauseAfter: 600,
       },
       {
         pos: new THREE.Vector3(0, 1.6, -19.0),
         look: new THREE.Vector3(0, 1.6, -22.4),
-        duration: 1200,
+        duration: 1100,
       },
     ];
     runSequence(queue, "INSIDE_4");
-  }, [isWalking, runSequence, setDoorOpen]);
+  }, [runSequence, setDoorOpen]);
 
   // 9. Return to Lobby from anywhere
   const returnToLobby = useCallback(() => {
-    if (isWalking) return;
-    const queue: Waypoint[] = [
-      // Step to corridor center
-      {
+    if (isWalkingRef.current) return;
+    const isAtCenter = Math.abs(currentCamPos.current.x) < 0.2;
+    const queue: Waypoint[] = [];
+
+    // If inside a room, first step out to corridor center
+    if (!isAtCenter) {
+      queue.push({
         pos: new THREE.Vector3(0, 1.6, currentCamPos.current.z),
         look: new THREE.Vector3(0, 1.6, 2.0),
-        duration: 800,
+        duration: 600,
         onStart: () => {
           setDoorOpen("door1", false);
           setDoorOpen("door2", false);
           setDoorOpen("door3", false);
           setDoorOpen("door4", false);
         },
+      });
+    }
+
+    // Walk straight back to lobby
+    queue.push({
+      pos: new THREE.Vector3(0, 1.6, 2.5),
+      look: new THREE.Vector3(0, 1.6, 0),
+      duration: 1800,
+      onStart: () => {
+        setDoorOpen("door1", false);
+        setDoorOpen("door2", false);
+        setDoorOpen("door3", false);
+        setDoorOpen("door4", false);
+        setDoorOpen("entrance", false);
       },
-      // Walk back through corridor to lobby
-      {
-        pos: new THREE.Vector3(0, 1.6, 2.5),
-        look: new THREE.Vector3(0, 1.6, 0),
-        duration: 2400,
-        onStart: () => setDoorOpen("entrance", false),
-      },
-    ];
+    });
+
     runSequence(queue, "LOBBY");
-  }, [isWalking, runSequence, setDoorOpen]);
+  }, [runSequence, setDoorOpen]);
 
   // Quick navigation from top header
   const handleHeaderNav = useCallback((dest: "LOBBY" | "ROOM_1" | "ROOM_2" | "ROOM_3" | "ROOM_4") => {
@@ -423,6 +430,21 @@ export default function OfficeFPV3D() {
   // ==========================================
   // THREE.JS SCENE CREATION
   // ==========================================
+  const actionsRef = useRef({
+    enterLabFromLobby,
+    enterRoom1,
+    enterRoom2,
+    enterRoom3,
+    enterRoom4,
+  });
+  actionsRef.current = {
+    enterLabFromLobby,
+    enterRoom1,
+    enterRoom2,
+    enterRoom3,
+    enterRoom4,
+  };
+
   useEffect(() => {
     const container = mountRef.current;
     if (!container) return;
@@ -1180,19 +1202,19 @@ export default function OfficeFPV3D() {
     };
 
     // 1. Entrance Door (Hinged at left jamb x = -0.57, z = 0, baseY = 0)
-    create3DDoor("entrance", [-0.57, 0, 0], 0, "UTHUM NALINDA", "SOFTWARE & SECURITY LAB", enterLabFromLobby);
+    create3DDoor("entrance", [-0.57, 0, 0], 0, "UTHUM NALINDA", "SOFTWARE & SECURITY LAB", () => actionsRef.current.enterLabFromLobby());
 
     // 2. Door 1 (Hinged at left jamb x = -1.2, z = -1.93, baseY = Math.PI / 2)
-    create3DDoor("door1", [-1.2, 0, -1.93], Math.PI / 2, "01 // ABOUT ME", "PROFILE ELEVATION", enterRoom1);
+    create3DDoor("door1", [-1.2, 0, -1.93], Math.PI / 2, "01 // ABOUT ME", "PROFILE ELEVATION", () => actionsRef.current.enterRoom1());
 
     // 3. Door 2 (Hinged at right jamb x = 1.2, z = -7.07, baseY = -Math.PI / 2)
-    create3DDoor("door2", [1.2, 0, -7.07], -Math.PI / 2, "02 // SELECTED SYSTEMS", "PROJECT SCHEMATICS", enterRoom2);
+    create3DDoor("door2", [1.2, 0, -7.07], -Math.PI / 2, "02 // SELECTED SYSTEMS", "PROJECT SCHEMATICS", () => actionsRef.current.enterRoom2());
 
     // 4. Door 3 (Hinged at left jamb x = -1.2, z = -9.93, baseY = Math.PI / 2)
-    create3DDoor("door3", [-1.2, 0, -9.93], Math.PI / 2, "03 // ARSENAL", "SYSTEM WIRING", enterRoom3);
+    create3DDoor("door3", [-1.2, 0, -9.93], Math.PI / 2, "03 // ARSENAL", "SYSTEM WIRING", () => actionsRef.current.enterRoom3());
 
     // 5. Door 4 (Hinged at back doorway x = -0.57, z = -17.5, baseY = 0)
-    create3DDoor("door4", [-0.57, 0, -17.5], 0, "04 // DRAFTING DESK", "CONTACT & INQUIRIES", enterRoom4);
+    create3DDoor("door4", [-0.57, 0, -17.5], 0, "04 // DRAFTING DESK", "CONTACT & INQUIRIES", () => actionsRef.current.enterRoom4());
 
     // ============================================================
     // 7. WALL BLUEPRINT BOARDS (INSIDE ROOMS)
@@ -1475,7 +1497,7 @@ export default function OfficeFPV3D() {
     const mouse = new THREE.Vector2();
 
     const handleCanvasClick = (e: MouseEvent) => {
-      if (!container || isWalking) return;
+      if (!container || isWalkingRef.current) return;
       const rect = container.getBoundingClientRect();
       mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
@@ -1530,7 +1552,8 @@ export default function OfficeFPV3D() {
         if (now < wp.pauseUntil) {
           // Waiting for door to swing open
         } else {
-          const elapsed = now - wp.startTime;
+          const actualStart = wp.pauseUntil > 0 ? wp.pauseUntil : wp.startTime;
+          const elapsed = now - actualStart;
           const progress = Math.min(1, elapsed / wp.duration);
           const eased = easeInOutCubic(progress);
 
@@ -1564,7 +1587,8 @@ export default function OfficeFPV3D() {
           pauseUntil: pauseDuration > 0 ? now + pauseDuration : 0,
         };
       } else {
-        if (isWalking) {
+        if (isWalkingRef.current) {
+          isWalkingRef.current = false;
           setIsWalking(false);
         }
       }
@@ -1612,7 +1636,7 @@ export default function OfficeFPV3D() {
       }
       renderer.dispose();
     };
-  }, [enterLabFromLobby, enterRoom1, enterRoom2, enterRoom3, enterRoom4, isWalking]);
+  }, []);
 
   const copyEmail = () => {
     navigator.clipboard.writeText("uthumnalinda@gmail.com");
@@ -2043,41 +2067,46 @@ export default function OfficeFPV3D() {
         {/* Step Backward / Exit Room Button */}
         <button
           onClick={() => {
+            if (isWalkingRef.current) return;
             if (location === "INSIDE_1") {
               const queue: Waypoint[] = [
-                { pos: new THREE.Vector3(0, 1.6, -2.5), look: new THREE.Vector3(-2.4, 1.6, -2.5), duration: 800, onStart: () => setDoorOpen("door1", false) },
+                { pos: new THREE.Vector3(0, 1.6, -2.5), look: new THREE.Vector3(-2.4, 1.6, -2.5), duration: 750 },
+                { pos: new THREE.Vector3(0, 1.6, -2.5), look: new THREE.Vector3(-2.4, 1.6, -2.5), duration: 150, onStart: () => setDoorOpen("door1", false) },
               ];
               runSequence(queue, "CORRIDOR_1");
             } else if (location === "INSIDE_2") {
               const queue: Waypoint[] = [
-                { pos: new THREE.Vector3(0, 1.6, -6.5), look: new THREE.Vector3(2.4, 1.6, -6.5), duration: 800, onStart: () => setDoorOpen("door2", false) },
+                { pos: new THREE.Vector3(0, 1.6, -6.5), look: new THREE.Vector3(2.4, 1.6, -6.5), duration: 750 },
+                { pos: new THREE.Vector3(0, 1.6, -6.5), look: new THREE.Vector3(2.4, 1.6, -6.5), duration: 150, onStart: () => setDoorOpen("door2", false) },
               ];
               runSequence(queue, "CORRIDOR_2");
             } else if (location === "INSIDE_3") {
               const queue: Waypoint[] = [
-                { pos: new THREE.Vector3(0, 1.6, -10.5), look: new THREE.Vector3(-2.4, 1.6, -10.5), duration: 800, onStart: () => setDoorOpen("door3", false) },
+                { pos: new THREE.Vector3(0, 1.6, -10.5), look: new THREE.Vector3(-2.4, 1.6, -10.5), duration: 750 },
+                { pos: new THREE.Vector3(0, 1.6, -10.5), look: new THREE.Vector3(-2.4, 1.6, -10.5), duration: 150, onStart: () => setDoorOpen("door3", false) },
               ];
               runSequence(queue, "CORRIDOR_3");
             } else if (location === "INSIDE_4") {
               const queue: Waypoint[] = [
-                { pos: new THREE.Vector3(0, 1.6, -16.0), look: new THREE.Vector3(0, 1.6, -17.5), duration: 800, onStart: () => setDoorOpen("door4", false) },
+                { pos: new THREE.Vector3(0, 1.6, -16.0), look: new THREE.Vector3(0, 1.6, -17.5), duration: 750 },
+                { pos: new THREE.Vector3(0, 1.6, -16.0), look: new THREE.Vector3(0, 1.6, -17.5), duration: 150, onStart: () => setDoorOpen("door4", false) },
               ];
               runSequence(queue, "CORRIDOR_4");
             } else if (location === "CORRIDOR_1") {
               returnToLobby();
             } else if (location === "CORRIDOR_2") {
               const queue: Waypoint[] = [
-                { pos: new THREE.Vector3(0, 1.6, -2.5), look: new THREE.Vector3(-2.4, 1.6, -2.5), duration: 1500 },
+                { pos: new THREE.Vector3(0, 1.6, -2.5), look: new THREE.Vector3(-2.4, 1.6, -2.5), duration: 1000 },
               ];
               runSequence(queue, "CORRIDOR_1");
             } else if (location === "CORRIDOR_3") {
               const queue: Waypoint[] = [
-                { pos: new THREE.Vector3(0, 1.6, -6.5), look: new THREE.Vector3(2.4, 1.6, -6.5), duration: 1500 },
+                { pos: new THREE.Vector3(0, 1.6, -6.5), look: new THREE.Vector3(2.4, 1.6, -6.5), duration: 1000 },
               ];
               runSequence(queue, "CORRIDOR_2");
             } else if (location === "CORRIDOR_4") {
               const queue: Waypoint[] = [
-                { pos: new THREE.Vector3(0, 1.6, -10.5), look: new THREE.Vector3(-2.4, 1.6, -10.5), duration: 1500 },
+                { pos: new THREE.Vector3(0, 1.6, -10.5), look: new THREE.Vector3(-2.4, 1.6, -10.5), duration: 1000 },
               ];
               runSequence(queue, "CORRIDOR_3");
             }
