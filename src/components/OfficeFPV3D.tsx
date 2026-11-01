@@ -679,12 +679,12 @@ export default function OfficeFPV3D() {
       canvas.height = 1024; // Y represents height of glass panel
       const ctx = canvas.getContext("2d")!;
 
-      // Clear glass background (crystal clear with faint soft tint)
-      ctx.fillStyle = "rgba(240, 248, 252, 0.04)";
+      // Clear glass background (architectural crystal lightest blue tint)
+      ctx.fillStyle = "rgba(195, 232, 246, 0.22)";
       ctx.fillRect(0, 0, 512, 1024);
 
-      // Frosted translucent white stripes in middle section (eye & waist levels)
-      ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
+      // Frosted translucent icy-white manifestation stripes in middle section (eye & waist levels)
+      ctx.fillStyle = "rgba(235, 248, 255, 0.78)";
 
       // Realistic horizontal manifestation bands matching executive corporate office
       const stripeConfigs = [
@@ -845,14 +845,36 @@ export default function OfficeFPV3D() {
       color: 0xf7f7f5, // Clean matte architectural ceiling
       roughness: 0.95,
     });
-    // Full-height Transparent Glass with Frosted Horizontal Manifestation
+    // Full-height Transparent Glass with Lightest Blue Tint
     const glassMaterial = new THREE.MeshStandardMaterial({
+      color: 0xd8eff8, // Pure crystalline lightest blue architectural glass
       map: frostedTexture,
       transparent: true,
       opacity: 0.82,
       roughness: 0.05,
       metalness: 0.15,
       depthWrite: false, // Ensures interior furniture and wall posters render cleanly behind glass
+    });
+
+    // 3D Glass Door Leaf: High-specular tempered glass
+    const doorGlassMaterial = new THREE.MeshStandardMaterial({
+      color: 0xdaf2fb, // Pure architectural lightest aqua glass
+      map: frostedTexture,
+      transparent: true,
+      opacity: 0.85,
+      roughness: 0.03,
+      metalness: 0.18,
+      depthWrite: false,
+    });
+
+    // Polished Tempered Glass Edge (darker aqua/teal due to internal light refraction along glass edges)
+    const glassEdgeMaterial = new THREE.MeshStandardMaterial({
+      color: 0x4d8a98,
+      transparent: true,
+      opacity: 0.92,
+      roughness: 0.08,
+      metalness: 0.25,
+      depthWrite: false,
     });
     // Anodized Matte Black / Dark Charcoal Clamping Channels & Baseboards
     const aluminumTrackMaterial = new THREE.MeshStandardMaterial({
@@ -1407,14 +1429,43 @@ export default function OfficeFPV3D() {
 
       const doorW = 1.14;
       const doorH = 2.24;
-      const doorThick = 0.02; // Realistic 12mm-19mm tempered architectural glass
+      const doorThick = 0.024; // Realistic 24mm architectural tempered safety glass slab
 
-      // Frameless Tempered Glass Door Leaf with Frosted Horizontal Stripes
+      // Frameless Tempered Glass Door Leaf (Pure Crystalline Lightest Blue)
       const leafGeo = new THREE.BoxGeometry(doorW, doorH, doorThick);
-      const leaf = new THREE.Mesh(leafGeo, glassMaterial);
+      const leaf = new THREE.Mesh(leafGeo, doorGlassMaterial);
       leaf.position.set(doorW / 2, doorH / 2, 0);
       leaf.renderOrder = 11;
       doorHinge.add(leaf);
+
+      // Polished Tempered Glass Edges (Gives visible 3D volume, thickness, and aqua refraction when swinging)
+      const edgeTop = new THREE.Mesh(
+        new THREE.BoxGeometry(doorW, 0.005, doorThick + 0.002),
+        glassEdgeMaterial
+      );
+      edgeTop.position.set(doorW / 2, doorH - 0.0025, 0);
+      doorHinge.add(edgeTop);
+
+      const edgeBottom = new THREE.Mesh(
+        new THREE.BoxGeometry(doorW, 0.005, doorThick + 0.002),
+        glassEdgeMaterial
+      );
+      edgeBottom.position.set(doorW / 2, 0.0025, 0);
+      doorHinge.add(edgeBottom);
+
+      const edgeRight = new THREE.Mesh(
+        new THREE.BoxGeometry(0.005, doorH, doorThick + 0.002),
+        glassEdgeMaterial
+      );
+      edgeRight.position.set(doorW - 0.0025, doorH / 2, 0);
+      doorHinge.add(edgeRight);
+
+      const edgeLeft = new THREE.Mesh(
+        new THREE.BoxGeometry(0.005, doorH, doorThick + 0.002),
+        glassEdgeMaterial
+      );
+      edgeLeft.position.set(0.0025, doorH / 2, 0);
+      doorHinge.add(edgeLeft);
 
       // Stainless Steel / Chrome Top & Bottom Pivot Patch Fittings
       const patchTop = new THREE.Mesh(
@@ -1430,6 +1481,14 @@ export default function OfficeFPV3D() {
       );
       patchBottom.position.set(0.08, 0.025, 0);
       doorHinge.add(patchBottom);
+
+      // Bottom stainless steel floor latch / lock fitting
+      const floorLock = new THREE.Mesh(
+        new THREE.BoxGeometry(0.12, 0.045, 0.038),
+        chromeMaterial
+      );
+      floorLock.position.set(doorW * 0.85, 0.025, 0);
+      doorHinge.add(floorLock);
 
       // Long Vertical Chrome Tubular Ladder Pull Handle (D-Handle)
       const handleGroup = new THREE.Group();
@@ -1473,7 +1532,7 @@ export default function OfficeFPV3D() {
 
       doorHinge.add(handleGroup);
 
-      // High-Visibility Architectural Door Plaque / Transom Banner
+      // High-Visibility Architectural Frosted Glass Plaque (Semi-transparent etched glass)
       const isEntrance = nameKey === "entrance";
       const pWidth = isEntrance ? 0.98 : 0.84;
       const pHeight = isEntrance ? 0.30 : 0.24;
@@ -1483,16 +1542,21 @@ export default function OfficeFPV3D() {
       pCanvas.height = Math.round(1024 * (pHeight / pWidth));
       const pCtx = pCanvas.getContext("2d")!;
 
-      // Deep Charcoal Architectural Bronze Plaque Backing
-      pCtx.fillStyle = "#141312";
-      pCtx.fillRect(0, 0, pCanvas.width, pCanvas.height);
+      // Clear glass background with frosted translucent backing plate
+      pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+      pCtx.fillStyle = "rgba(220, 242, 252, 0.32)";
+      pCtx.beginPath();
+      pCtx.roundRect(8, 8, pCanvas.width - 16, pCanvas.height - 16, 24);
+      pCtx.fill();
 
       // Burnt Orange Geometric Accent Border
-      pCtx.strokeStyle = "#ea580c";
+      pCtx.strokeStyle = "rgba(234, 88, 12, 0.95)";
       pCtx.lineWidth = isEntrance ? 10 : 8;
-      pCtx.strokeRect(8, 8, pCanvas.width - 16, pCanvas.height - 16);
+      pCtx.stroke();
 
-      // Main Header Text (Crisp Pure White)
+      // Main Header Text (Crisp Pure White with readable shadow)
+      pCtx.shadowColor = "rgba(0, 0, 0, 0.65)";
+      pCtx.shadowBlur = 8;
       pCtx.fillStyle = "#ffffff";
       pCtx.font = isEntrance
         ? "bold 68px 'Space Grotesk', -apple-system, sans-serif"
@@ -1506,11 +1570,19 @@ export default function OfficeFPV3D() {
         : "bold 30px 'JetBrains Mono', monospace";
       pCtx.fillText(subText, 40, isEntrance ? 212 : 184);
 
+      pCtx.shadowColor = "transparent";
+      pCtx.shadowBlur = 0;
+
       const pTex = new THREE.CanvasTexture(pCanvas);
       pTex.generateMipmaps = true;
       pTex.minFilter = THREE.LinearMipmapLinearFilter;
       const pGeo = new THREE.PlaneGeometry(pWidth, pHeight);
-      const pMat = new THREE.MeshBasicMaterial({ map: pTex });
+      const pMat = new THREE.MeshBasicMaterial({
+        map: pTex,
+        transparent: true,
+        opacity: 0.96,
+        depthWrite: false,
+      });
 
       // Front facing plaque (eye level at Y = 1.72m)
       const plaqueMesh = new THREE.Mesh(pGeo, pMat);
