@@ -1661,6 +1661,16 @@ export default function OfficeFPV3D() {
         action: onClickDoor,
         allowedLocations: doorLocs[nameKey] || ["CORRIDOR_1"],
       });
+      clickablesRef.current.push({
+        mesh: plaqueMesh,
+        action: onClickDoor,
+        allowedLocations: doorLocs[nameKey] || ["CORRIDOR_1"],
+      });
+      clickablesRef.current.push({
+        mesh: plaqueBack,
+        action: onClickDoor,
+        allowedLocations: doorLocs[nameKey] || ["CORRIDOR_1"],
+      });
     };
 
     // 1. Entrance Door (Hinged at left jamb x = -0.57, z = 0, baseY = 0)
@@ -1998,7 +2008,24 @@ export default function OfficeFPV3D() {
 
       if (intersects.length > 0) {
         let hit = intersects[0].object;
-        // If the closest object hit is a wall or partition, the click is occluded
+
+        // If in LOBBY, any click in the 3D scene guides the visitor to scan their pass
+        if (curLoc === "LOBBY") {
+          let temp: THREE.Object3D | null = hit;
+          while (temp && temp !== scene) {
+            const matched = validClickables.find((c) => c.mesh === temp);
+            if (matched) {
+              matched.action();
+              return;
+            }
+            temp = temp.parent;
+          }
+          // Clicked wall, stand, floor, or doorway frame in lobby
+          actionsRef.current.showDeniedHint();
+          return;
+        }
+
+        // If in corridor/rooms: closest object hit by wall occludes clicks behind it
         if (wallsRef.current.includes(hit as THREE.Mesh)) return;
 
         while (hit && hit !== scene) {
@@ -2010,6 +2037,9 @@ export default function OfficeFPV3D() {
           if (hit.parent) hit = hit.parent;
           else break;
         }
+      } else if (curLoc === "LOBBY") {
+        // Clicked into open space in lobby
+        actionsRef.current.showDeniedHint();
       }
     };
 
