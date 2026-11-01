@@ -1532,7 +1532,7 @@ export default function OfficeFPV3D() {
 
       doorHinge.add(handleGroup);
 
-      // High-Visibility Architectural Frosted Glass Plaque (Semi-transparent etched glass)
+      // High-Visibility Solid Architectural Door Signage Plate
       const isEntrance = nameKey === "entrance";
       const pWidth = isEntrance ? 0.98 : 0.84;
       const pHeight = isEntrance ? 0.30 : 0.24;
@@ -1542,46 +1542,42 @@ export default function OfficeFPV3D() {
       pCanvas.height = Math.round(1024 * (pHeight / pWidth));
       const pCtx = pCanvas.getContext("2d")!;
 
-      // Clear glass background with frosted translucent backing plate
-      pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
-      pCtx.fillStyle = "rgba(220, 242, 252, 0.32)";
-      pCtx.beginPath();
-      pCtx.roundRect(8, 8, pCanvas.width - 16, pCanvas.height - 16, 24);
-      pCtx.fill();
+      // 1. Solid Deep Architectural Dark Graphite Plate (100% Opaque for maximum contrast)
+      pCtx.fillStyle = "#121316";
+      pCtx.fillRect(0, 0, pCanvas.width, pCanvas.height);
 
-      // Burnt Orange Geometric Accent Border
-      pCtx.strokeStyle = "rgba(234, 88, 12, 0.95)";
-      pCtx.lineWidth = isEntrance ? 10 : 8;
-      pCtx.stroke();
+      // 2. Precision Burnt Orange Architectural Border
+      pCtx.strokeStyle = "#ea580c";
+      pCtx.lineWidth = isEntrance ? 12 : 10;
+      pCtx.strokeRect(6, 6, pCanvas.width - 12, pCanvas.height - 12);
 
-      // Main Header Text (Crisp Pure White with readable shadow)
-      pCtx.shadowColor = "rgba(0, 0, 0, 0.65)";
-      pCtx.shadowBlur = 8;
+      // 3. Inner accent micro-line for high-end signage feel
+      pCtx.strokeStyle = "rgba(251, 146, 60, 0.4)";
+      pCtx.lineWidth = 2;
+      pCtx.strokeRect(18, 18, pCanvas.width - 36, pCanvas.height - 36);
+
+      // 4. Main Header Text (Crisp Pure White — Razor Sharp Legibility)
       pCtx.fillStyle = "#ffffff";
       pCtx.font = isEntrance
-        ? "bold 68px 'Space Grotesk', -apple-system, sans-serif"
-        : "bold 58px 'Space Grotesk', -apple-system, sans-serif";
-      pCtx.fillText(plaqueText, 40, isEntrance ? 122 : 104);
+        ? "900 68px 'Space Grotesk', -apple-system, sans-serif"
+        : "900 58px 'Space Grotesk', -apple-system, sans-serif";
+      pCtx.fillText(plaqueText, 44, isEntrance ? 124 : 104);
 
-      // Subtitle / Designation (Vibrant High-Contrast Orange)
+      // 5. Subtitle / Designation (Vibrant High-Contrast Orange)
       pCtx.fillStyle = "#fb923c";
       pCtx.font = isEntrance
-        ? "bold 36px 'JetBrains Mono', monospace"
-        : "bold 30px 'JetBrains Mono', monospace";
-      pCtx.fillText(subText, 40, isEntrance ? 212 : 184);
-
-      pCtx.shadowColor = "transparent";
-      pCtx.shadowBlur = 0;
+        ? "bold 34px 'JetBrains Mono', monospace"
+        : "bold 28px 'JetBrains Mono', monospace";
+      pCtx.fillText(subText, 44, isEntrance ? 212 : 182);
 
       const pTex = new THREE.CanvasTexture(pCanvas);
       pTex.generateMipmaps = true;
       pTex.minFilter = THREE.LinearMipmapLinearFilter;
+      pTex.anisotropy = 16;
       const pGeo = new THREE.PlaneGeometry(pWidth, pHeight);
       const pMat = new THREE.MeshBasicMaterial({
         map: pTex,
-        transparent: true,
-        opacity: 0.96,
-        depthWrite: false,
+        depthWrite: true,
       });
 
       // Front facing plaque (eye level at Y = 1.72m)
