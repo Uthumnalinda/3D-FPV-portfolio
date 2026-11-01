@@ -1556,19 +1556,29 @@ export default function OfficeFPV3D() {
       pCtx.lineWidth = 2;
       pCtx.strokeRect(18, 18, pCanvas.width - 36, pCanvas.height - 36);
 
-      // 4. Main Header Text (Crisp Pure White — Razor Sharp Legibility)
-      pCtx.fillStyle = "#ffffff";
-      pCtx.font = isEntrance
-        ? "900 68px 'Space Grotesk', -apple-system, sans-serif"
-        : "900 58px 'Space Grotesk', -apple-system, sans-serif";
-      pCtx.fillText(plaqueText, 44, isEntrance ? 124 : 104);
+      // 4. Centralized Typography
+      pCtx.textAlign = "center";
+      pCtx.textBaseline = "middle";
 
-      // 5. Subtitle / Designation (Vibrant High-Contrast Orange)
-      pCtx.fillStyle = "#fb923c";
-      pCtx.font = isEntrance
-        ? "bold 34px 'JetBrains Mono', monospace"
-        : "bold 28px 'JetBrains Mono', monospace";
-      pCtx.fillText(subText, 44, isEntrance ? 212 : 182);
+      if (!subText) {
+        // Single centralized header (e.g. "ENTER")
+        pCtx.fillStyle = "#ffffff";
+        pCtx.font = "900 86px 'Space Grotesk', -apple-system, sans-serif";
+        pCtx.fillText(plaqueText, pCanvas.width / 2, pCanvas.height / 2);
+      } else {
+        // Centralized Header + Subtitle
+        pCtx.fillStyle = "#ffffff";
+        pCtx.font = isEntrance
+          ? "900 68px 'Space Grotesk', -apple-system, sans-serif"
+          : "900 58px 'Space Grotesk', -apple-system, sans-serif";
+        pCtx.fillText(plaqueText, pCanvas.width / 2, isEntrance ? 116 : 100);
+
+        pCtx.fillStyle = "#fb923c";
+        pCtx.font = isEntrance
+          ? "bold 34px 'JetBrains Mono', monospace"
+          : "bold 28px 'JetBrains Mono', monospace";
+        pCtx.fillText(subText, pCanvas.width / 2, isEntrance ? 204 : 176);
+      }
 
       const pTex = new THREE.CanvasTexture(pCanvas);
       pTex.generateMipmaps = true;
@@ -1610,7 +1620,7 @@ export default function OfficeFPV3D() {
     };
 
     // 1. Entrance Door (Hinged at left jamb x = -0.57, z = 0, baseY = 0)
-    create3DDoor("entrance", [-0.57, 0, 0], 0, "UTHUM NALINDA", "SOFTWARE & SECURITY LAB", () => {
+    create3DDoor("entrance", [-0.57, 0, 0], 0, "ENTER", "", () => {
       if (currentCamPos.current.z > 0.8) {
         actionsRef.current.showDeniedHint();
       } else {
