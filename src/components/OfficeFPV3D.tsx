@@ -603,20 +603,22 @@ export default function OfficeFPV3D() {
       scene.add(zoneLight);
     });
 
-    // Helper: Anti-Z-Fighting Sketched Wireframe Edges
-    const addSketchEdges = (mesh: THREE.Mesh, color = 0x1a1c1e, threshold = 25) => {
+    // Helper: Anti-Z-Fighting Sketched Wireframe Edges (0.4 architectural drafting stroke)
+    const addSketchEdges = (mesh: THREE.Mesh, color = 0x1a1c1e, opacity = 0.4, threshold = 25) => {
       const edges = new THREE.EdgesGeometry(mesh.geometry, threshold);
       const line = new THREE.LineSegments(
         edges,
         new THREE.LineBasicMaterial({
           color,
-          linewidth: 1.5,
+          transparent: true,
+          opacity,
           polygonOffset: true,
           polygonOffsetFactor: -1,
           polygonOffsetUnits: -1,
         })
       );
       mesh.add(line);
+      return line;
     };
 
     // Helper: Realistic Polished Travertine / Limestone Floor Texture
@@ -921,6 +923,7 @@ export default function OfficeFPV3D() {
       mesh.position.set(x, y, z);
       scene.add(mesh);
       wallsRef.current.push(mesh);
+      addSketchEdges(mesh, 0x1a1c1e, 0.4);
 
       // Architectural Baseboard / Skirting to cleanly ground the wall
       const isZAxis = d > w;
@@ -934,6 +937,7 @@ export default function OfficeFPV3D() {
       const skirt = new THREE.Mesh(skirtGeo, aluminumTrackMaterial);
       skirt.position.set(x, skirtH / 2, z);
       scene.add(skirt);
+      addSketchEdges(skirt, 0x1a1c1e, 0.3);
 
       return mesh;
     };
@@ -959,6 +963,7 @@ export default function OfficeFPV3D() {
       );
       floorChan.position.set(x, channelThick / 2, z);
       scene.add(floorChan);
+      addSketchEdges(floorChan, 0x1a1c1e, 0.35);
 
       // Slim top clamping channel
       const ceilChan = new THREE.Mesh(
@@ -967,6 +972,7 @@ export default function OfficeFPV3D() {
       );
       ceilChan.position.set(x, h - channelThick / 2, z);
       scene.add(ceilChan);
+      addSketchEdges(ceilChan, 0x1a1c1e, 0.35);
 
       // Tempered Glass Pane with frosted manifestation stripes
       const glassGeo = new THREE.BoxGeometry(
@@ -983,7 +989,7 @@ export default function OfficeFPV3D() {
       return glassMesh;
     };
 
-    // Helper: Dark Marble / Bronze Structural Column (Clean architectural finish, no wireframe lines)
+    // Helper: Dark Marble / Bronze Structural Column (0.4 architectural drafting edge)
     const buildStructuralColumn = (x: number, z: number, w = 0.32, d = 0.32) => {
       const col = new THREE.Mesh(
         new THREE.BoxGeometry(w, corridorHeight, d),
@@ -992,6 +998,7 @@ export default function OfficeFPV3D() {
       col.position.set(x, corridorHeight / 2, z);
       scene.add(col);
       wallsRef.current.push(col);
+      addSketchEdges(col, 0x1a1c1e, 0.4);
       return col;
     };
 
@@ -1130,6 +1137,7 @@ export default function OfficeFPV3D() {
       );
       tableTop.position.set(centerX, 0.74, centerZ);
       scene.add(tableTop);
+      addSketchEdges(tableTop, 0x1a1c1e, 0.4);
 
       // Chrome cylindrical table legs
       const legOffsets = [
@@ -1169,6 +1177,7 @@ export default function OfficeFPV3D() {
       );
       top.position.y = 0.74;
       deskGroup.add(top);
+      addSketchEdges(top, 0x1a1c1e, 0.4);
 
       // Legs
       const dLegs = [
@@ -1274,6 +1283,7 @@ export default function OfficeFPV3D() {
     );
     standColumn.position.y = 0.425;
     standGroup.add(standColumn);
+    addSketchEdges(standColumn, 0x1a1c1e, 0.4);
 
     // Dark limestone tray shelf top (Reception surface)
     const standTop = new THREE.Mesh(
@@ -1282,6 +1292,7 @@ export default function OfficeFPV3D() {
     );
     standTop.position.y = 0.87;
     standGroup.add(standTop);
+    addSketchEdges(standTop, 0x1a1c1e, 0.4);
 
     // Dedicated keycard tray on top of the shelf
     const badgeTray = new THREE.Mesh(
