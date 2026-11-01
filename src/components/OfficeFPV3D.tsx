@@ -942,6 +942,23 @@ export default function OfficeFPV3D() {
       return mesh;
     };
 
+    // Helper: Crisp 0.4 Architectural Corner Stroke Lines (For inside room corners where perpendicular walls meet)
+    const cornerStrokeMaterial = new THREE.MeshBasicMaterial({
+      color: 0x1a1c1e,
+      transparent: true,
+      opacity: 0.45,
+      depthWrite: false,
+    });
+
+    const buildVerticalCorner = (x: number, z: number, height = corridorHeight, startY = 0.08) => {
+      const h = height - startY;
+      const cornerGeo = new THREE.BoxGeometry(0.007, h, 0.007);
+      const strokeMesh = new THREE.Mesh(cornerGeo, cornerStrokeMaterial);
+      strokeMesh.position.set(x, startY + h / 2, z);
+      scene.add(strokeMesh);
+      return strokeMesh;
+    };
+
     // Helper: Modern Frameless Glass Partition with Slim Satin Aluminum Channels
     const buildGlassWall = (
       x: number,
@@ -1250,6 +1267,12 @@ export default function OfficeFPV3D() {
     buildWall(1.8, corridorHeight / 2, 2.25, 0.14, corridorHeight, 4.5, lobbySideWallMaterial);
     buildWall(0, corridorHeight / 2, 4.5, 3.6, corridorHeight, 0.14, lobbySideWallMaterial);
 
+    // 4 Inside Vertical Corners of the Lobby Enclosure (0.4 architectural drafting strokes)
+    buildVerticalCorner(-1.728, 0.072); // Front-Left Corner (behind visitor console stand)
+    buildVerticalCorner(1.728, 0.072);  // Front-Right Corner
+    buildVerticalCorner(-1.728, 4.428); // Back-Left Corner
+    buildVerticalCorner(1.728, 4.428);  // Back-Right Corner
+
     // Overhead lobby fixture
     const lobbyLight = new THREE.PointLight(0xffedd5, 0.6, 6);
     lobbyLight.position.set(0, 2.9, 2.2);
@@ -1402,12 +1425,16 @@ export default function OfficeFPV3D() {
     buildWall(-3.0, corridorHeight / 2, -0.5, 3.6, corridorHeight, 0.14);  // North wall
     buildWall(-3.0, corridorHeight / 2, -4.5, 3.6, corridorHeight, 0.14);  // South wall
     buildWall(-4.8, corridorHeight / 2, -2.5, 0.14, corridorHeight, 4.0);  // Back exhibition wall
+    buildVerticalCorner(-4.728, -0.572); // Back-North inside corner
+    buildVerticalCorner(-4.728, -4.428); // Back-South inside corner
     buildExecutiveDesk(-3.0, -2.5, Math.PI / 2);
 
     // Room 2 Enclosure (Selected Systems, Right Side, z = -6.5, 4.6m wide in Z)
     buildWall(3.2, corridorHeight / 2, -4.2, 4.0, corridorHeight, 0.14);   // North wall
     buildWall(3.2, corridorHeight / 2, -8.8, 4.0, corridorHeight, 0.14);   // South wall
     buildWall(5.2, corridorHeight / 2, -6.5, 0.14, corridorHeight, 4.6);   // Back exhibition wall
+    buildVerticalCorner(5.128, -4.272); // Back-North inside corner
+    buildVerticalCorner(5.128, -8.728); // Back-South inside corner
     // Executive Meeting Boardroom visible through glass!
     buildConferenceRoom(3.2, -6.5);
 
@@ -1415,12 +1442,18 @@ export default function OfficeFPV3D() {
     buildWall(-3.0, corridorHeight / 2, -8.5, 3.6, corridorHeight, 0.14);  // North wall
     buildWall(-3.0, corridorHeight / 2, -12.5, 3.6, corridorHeight, 0.14); // South wall
     buildWall(-4.8, corridorHeight / 2, -10.5, 0.14, corridorHeight, 4.0); // Back exhibition wall
+    buildVerticalCorner(-4.728, -8.572);  // Back-North inside corner
+    buildVerticalCorner(-4.728, -12.428); // Back-South inside corner
     buildExecutiveDesk(-3.0, -10.5, Math.PI / 2);
 
     // Room 4 Enclosure (Contact Drafting Desk, Back, z = -17.5 to -22.5)
     buildWall(0, corridorHeight / 2, -22.5, 4.4, corridorHeight, 0.14);    // Back wall
     buildWall(-2.2, corridorHeight / 2, -20.0, 0.14, corridorHeight, 5.0); // Left wall
     buildWall(2.2, corridorHeight / 2, -20.0, 0.14, corridorHeight, 5.0);  // Right wall
+    buildVerticalCorner(-2.128, -22.428); // Back-Left inside corner
+    buildVerticalCorner(2.128, -22.428);  // Back-Right inside corner
+    buildVerticalCorner(-2.128, -17.572); // Front-Left inside corner
+    buildVerticalCorner(2.128, -17.572);  // Front-Right inside corner
     buildExecutiveDesk(0, -20.0, 0);
 
     // ==========================================
