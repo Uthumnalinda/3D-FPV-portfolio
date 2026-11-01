@@ -1295,21 +1295,77 @@ export default function OfficeFPV3D() {
     rightWallWash.target = rightTarget;
     scene.add(rightWallWash);
 
-    // Architectural Tech Mural Stencil (Option A: Black ink linework directly on limestone wall)
-    const stencilTex = new THREE.TextureLoader().load("/lobby-wall-stencil.png");
-    stencilTex.anisotropy = 16;
-    const stencilMat = new THREE.MeshBasicMaterial({
-      map: stencilTex,
+    // ============================================================
+    // FULL-WALL PROGRAMMING LANGUAGE ARCHITECTURAL BLUEPRINT MURALS
+    // (Floor-to-ceiling black linework directly on limestone walls)
+    // ============================================================
+    const texLoader = new THREE.TextureLoader();
+
+    // 1. Full Left Wall Mural (4.5m x 3.2m: Systems & Infrastructure)
+    const leftMuralTex = texLoader.load("/mural-left-wall.png");
+    leftMuralTex.anisotropy = 16;
+    const leftMuralMat = new THREE.MeshBasicMaterial({
+      map: leftMuralTex,
       transparent: true,
-      opacity: 0.88,
+      opacity: 0.92,
       depthWrite: false,
     });
-    // Aspect ratio ~1.98: 2.2m wide by 1.12m high
-    const stencilGeo = new THREE.PlaneGeometry(2.2, 1.12);
-    const stencilMesh = new THREE.Mesh(stencilGeo, stencilMat);
-    stencilMesh.position.set(-1.722, 1.62, 1.65);
-    stencilMesh.rotation.y = Math.PI / 2; // Facing into the lobby
-    scene.add(stencilMesh);
+    const leftMuralMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(4.46, corridorHeight - 0.08),
+      leftMuralMat
+    );
+    leftMuralMesh.position.set(-1.724, corridorHeight / 2 + 0.04, 2.25);
+    leftMuralMesh.rotation.y = Math.PI / 2;
+    scene.add(leftMuralMesh);
+
+    // 2. Full Right Wall Mural (4.5m x 3.2m: Web, Functional & Distributed)
+    const rightMuralTex = texLoader.load("/mural-right-wall.png");
+    rightMuralTex.anisotropy = 16;
+    const rightMuralMat = new THREE.MeshBasicMaterial({
+      map: rightMuralTex,
+      transparent: true,
+      opacity: 0.92,
+      depthWrite: false,
+    });
+    const rightMuralMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(4.46, corridorHeight - 0.08),
+      rightMuralMat
+    );
+    rightMuralMesh.position.set(1.724, corridorHeight / 2 + 0.04, 2.25);
+    rightMuralMesh.rotation.y = -Math.PI / 2;
+    scene.add(rightMuralMesh);
+
+    // 3. Front Wall Left Panel (Next to Entrance Door: Security & Low-Level Portal)
+    const frontLeftTex = texLoader.load("/mural-front-left.png");
+    frontLeftTex.anisotropy = 16;
+    const frontLeftMat = new THREE.MeshBasicMaterial({
+      map: frontLeftTex,
+      transparent: true,
+      opacity: 0.92,
+      depthWrite: false,
+    });
+    const frontLeftMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.13, corridorHeight - 0.08),
+      frontLeftMat
+    );
+    frontLeftMesh.position.set(-1.165, corridorHeight / 2 + 0.04, 0.076);
+    scene.add(frontLeftMesh);
+
+    // 4. Front Wall Right Panel (Around NFC Terminal: Distributed Systems & NFC)
+    const frontRightTex = texLoader.load("/mural-front-right.png");
+    frontRightTex.anisotropy = 16;
+    const frontRightMat = new THREE.MeshBasicMaterial({
+      map: frontRightTex,
+      transparent: true,
+      opacity: 0.92,
+      depthWrite: false,
+    });
+    const frontRightMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.13, corridorHeight - 0.08),
+      frontRightMat
+    );
+    frontRightMesh.position.set(1.165, corridorHeight / 2 + 0.04, 0.076);
+    scene.add(frontRightMesh);
 
     // 3D Minimalist Visitor Console Stand (Pedestal shelf on the left at x = -0.95, y = 0.42, z = 0.75)
     const standGroup = new THREE.Group();
