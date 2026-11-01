@@ -1295,6 +1295,22 @@ export default function OfficeFPV3D() {
     rightWallWash.target = rightTarget;
     scene.add(rightWallWash);
 
+    // Architectural Tech Mural Stencil (Option A: Black ink linework directly on limestone wall)
+    const stencilTex = new THREE.TextureLoader().load("/lobby-wall-stencil.png");
+    stencilTex.anisotropy = 16;
+    const stencilMat = new THREE.MeshBasicMaterial({
+      map: stencilTex,
+      transparent: true,
+      opacity: 0.88,
+      depthWrite: false,
+    });
+    // Aspect ratio ~1.98: 2.2m wide by 1.12m high
+    const stencilGeo = new THREE.PlaneGeometry(2.2, 1.12);
+    const stencilMesh = new THREE.Mesh(stencilGeo, stencilMat);
+    stencilMesh.position.set(-1.722, 1.62, 1.65);
+    stencilMesh.rotation.y = Math.PI / 2; // Facing into the lobby
+    scene.add(stencilMesh);
+
     // 3D Minimalist Visitor Console Stand (Pedestal shelf on the left at x = -0.95, y = 0.42, z = 0.75)
     const standGroup = new THREE.Group();
     standGroup.position.set(-0.95, 0, 0.75);
