@@ -1812,7 +1812,7 @@ export default function OfficeFPV3D() {
     });
 
     // 2. Door 1 (Hinged at left jamb x = -1.2, z = -1.93, baseY = Math.PI / 2)
-    create3DDoor("door1", [-1.2, 0, -1.93], Math.PI / 2, "01 // DOSSIER", "DEVELOPER PROFILE", () => {
+    create3DDoor("door1", [-1.2, 0, -1.93], Math.PI / 2, "01 // ABOUT ME", "DEVELOPER PROFILE", () => {
       if (locationRef.current === "INSIDE_1") {
         actionsRef.current.navigateTo("CORRIDOR_1");
       } else {
@@ -1870,7 +1870,7 @@ export default function OfficeFPV3D() {
     // 7. WALL BLUEPRINT BOARDS (INSIDE ROOMS)
     // ============================================================
 
-    // ROOM 1: ABOUT ME WALL DOSSIER BOARD (Mounted inside Room 1 at x = -4.72, z = -2.5)
+    // ROOM 1: ABOUT ME WALL ABOUT ME BOARD (Mounted inside Room 1 at x = -4.72, z = -2.5)
     {
       const canvas = document.createElement("canvas");
       canvas.width = 1024;
@@ -1885,7 +1885,7 @@ export default function OfficeFPV3D() {
 
       ctx.fillStyle = "#c2410c";
       ctx.font = "bold 28px 'JetBrains Mono', monospace";
-      ctx.fillText("DOOR 01 // LEFT WALL • ELEVATION DOSSIER", 50, 75);
+      ctx.fillText("DOOR 01 // LEFT WALL • ELEVATION ABOUT ME", 50, 75);
 
       ctx.fillStyle = "#1a1c1e";
       ctx.font = "bold 60px 'Space Grotesk', sans-serif";
@@ -1915,7 +1915,7 @@ export default function OfficeFPV3D() {
       ctx.fillRect(50, 640, 420, 60);
       ctx.fillStyle = "#ffffff";
       ctx.font = "bold 22px 'JetBrains Mono', monospace";
-      ctx.fillText("🔍 CLICK TO EXPAND DOSSIER →", 70, 678);
+      ctx.fillText("🔍 CLICK TO EXPAND ABOUT ME →", 70, 678);
 
       const tex = new THREE.CanvasTexture(canvas);
       const mesh = new THREE.Mesh(
@@ -2472,7 +2472,7 @@ export default function OfficeFPV3D() {
               </button>
 
               <div className="font-mono text-xs text-orange-700 font-bold uppercase tracking-widest border-b border-stone-300 pb-2">
-                DOOR 01 // WALL ELEVATION DOSSIER • COLOMBO, SRI LANKA
+                DOOR 01 // WALL ELEVATION ABOUT ME • COLOMBO, SRI LANKA
               </div>
 
               <div className="space-y-2">
