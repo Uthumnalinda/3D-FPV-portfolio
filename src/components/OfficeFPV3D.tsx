@@ -140,6 +140,7 @@ export default function OfficeFPV3D() {
     allowedLocations?: LocationState[];
   }[]>([]);
   const wallsRef = useRef<THREE.Mesh[]>([]);
+  const solidWallsRef = useRef<THREE.Mesh[]>([]);
   const locationRef = useRef<LocationState>(location);
   locationRef.current = location;
 
@@ -204,7 +205,7 @@ export default function OfficeFPV3D() {
     ROOM_4: {
       corridorZ: -16.0,
       doorKey: "door4",
-      openAngle: -Math.PI / 2.15,
+      openAngle: Math.PI / 2.15,
       corridorLoc: "CORRIDOR_4" as LocationState,
       insideLoc: "INSIDE_4" as LocationState,
       corridorLook: new THREE.Vector3(0, 1.6, -17.5),
@@ -560,6 +561,8 @@ export default function OfficeFPV3D() {
     if (!container) return;
 
     clickablesRef.current = [];
+    wallsRef.current = [];
+    solidWallsRef.current = [];
 
     const width = container.clientWidth;
     const height = container.clientHeight;
@@ -923,6 +926,7 @@ export default function OfficeFPV3D() {
       mesh.position.set(x, y, z);
       scene.add(mesh);
       wallsRef.current.push(mesh);
+      solidWallsRef.current.push(mesh);
       addSketchEdges(mesh, 0x1a1c1e, 0.4);
 
       // Architectural Baseboard / Skirting to cleanly ground the wall
@@ -1554,6 +1558,17 @@ export default function OfficeFPV3D() {
       leaf.renderOrder = 11;
       doorHinge.add(leaf);
 
+      // Generous invisible hit collider (envelops door leaf, frame, pull handle & plaque)
+      // Thickness 0.34m ensures clicks from any angle or distance hit the door collider first
+      // before being occluded by any adjacent drywall or transoms.
+      const hitCollider = new THREE.Mesh(
+        new THREE.BoxGeometry(doorW + 0.16, doorH + 0.12, 0.34),
+        new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
+      );
+      hitCollider.position.set(doorW / 2, doorH / 2, 0);
+      hitCollider.renderOrder = 999;
+      doorHinge.add(hitCollider);
+
       // Polished Tempered Glass Edges (Gives visible 3D volume, thickness, and aqua refraction when swinging)
       const edgeTop = new THREE.Mesh(
         new THREE.BoxGeometry(doorW, 0.005, doorThick + 0.002),
@@ -1720,28 +1735,22 @@ export default function OfficeFPV3D() {
       scene.add(doorHinge);
       doorsRef.current[nameKey] = { group: doorHinge, baseY: baseRotationY };
 
-      const doorLocs: { [key: string]: LocationState[] } = {
-        entrance: ["LOBBY", "CORRIDOR_1"],
-        door1: ["CORRIDOR_1", "INSIDE_1"],
-        door2: ["CORRIDOR_2", "INSIDE_2"],
-        door3: ["CORRIDOR_3", "INSIDE_3"],
-        door4: ["CORRIDOR_4", "INSIDE_4"],
-      };
+      // Register all child meshes (glass, hardware, ladder handle, edges, plaques)
+      // so clicking ANYWHERE on the door reliably triggers the action.
+      // Doors 1-4 are interactive from any corridor or room without artificial state locks.
+      const doorAllowedLocs =
+        nameKey === "entrance"
+          ? (["LOBBY", "CORRIDOR_1", "CORRIDOR_2", "CORRIDOR_3", "CORRIDOR_4"] as LocationState[])
+          : undefined;
 
-      clickablesRef.current.push({
-        mesh: leaf,
-        action: onClickDoor,
-        allowedLocations: doorLocs[nameKey] || ["CORRIDOR_1"],
-      });
-      clickablesRef.current.push({
-        mesh: plaqueMesh,
-        action: onClickDoor,
-        allowedLocations: doorLocs[nameKey] || ["CORRIDOR_1"],
-      });
-      clickablesRef.current.push({
-        mesh: plaqueBack,
-        action: onClickDoor,
-        allowedLocations: doorLocs[nameKey] || ["CORRIDOR_1"],
+      doorHinge.traverse((child) => {
+        if ((child as THREE.Mesh).isMesh) {
+          clickablesRef.current.push({
+            mesh: child as THREE.Mesh,
+            action: onClickDoor,
+            allowedLocations: doorAllowedLocs,
+          });
+        }
       });
     };
 
@@ -1755,23 +1764,58 @@ export default function OfficeFPV3D() {
     });
 
     // 2. Door 1 (Hinged at left jamb x = -1.2, z = -1.93, baseY = Math.PI / 2)
-    create3DDoor("door1", [-1.2, 0, -1.93], Math.PI / 2, "ABOUT ME", "DEVELOPER PROFILE", () => {
-      actionsRef.current.navigateTo("ROOM_1");
+    create3DDoor("door1", [-1.2, 0, -1.93], Math.PI / 2, "01 // DOSSIER", "DEVELOPER PROFILE", () => {
+      if (locationRef.current === "INSIDE_1") {
+        actionsRef.current.navigateTo("CORRIDOR_1");
+      } else {
+        actionsRef.current.navigateTo("ROOM_1");
+      }
     });
 
     // 3. Door 2 (Hinged at right jamb x = 1.2, z = -7.07, baseY = -Math.PI / 2)
     create3DDoor("door2", [1.2, 0, -7.07], -Math.PI / 2, "02 // SELECTED SYSTEMS", "PROJECT SCHEMATICS", () => {
-      actionsRef.current.navigateTo("ROOM_2");
+      if (locationRef.current === "INSIDE_2") {
+        actionsRef.current.navigateTo("CORRIDOR_2");
+      } else {
+        actionsRef.current.navigateTo("ROOM_2");
+      }
     });
 
     // 4. Door 3 (Hinged at left jamb x = -1.2, z = -9.93, baseY = Math.PI / 2)
     create3DDoor("door3", [-1.2, 0, -9.93], Math.PI / 2, "03 // ARSENAL", "SYSTEM WIRING", () => {
-      actionsRef.current.navigateTo("ROOM_3");
+      if (locationRef.current === "INSIDE_3") {
+        actionsRef.current.navigateTo("CORRIDOR_3");
+      } else {
+        actionsRef.current.navigateTo("ROOM_3");
+      }
     });
 
     // 5. Door 4 (Hinged at back doorway x = -0.57, z = -17.5, baseY = 0)
     create3DDoor("door4", [-0.57, 0, -17.5], 0, "04 // DRAFTING DESK", "CONTACT & INQUIRIES", () => {
-      actionsRef.current.navigateTo("ROOM_4");
+      if (locationRef.current === "INSIDE_4") {
+        actionsRef.current.navigateTo("CORRIDOR_4");
+      } else {
+        actionsRef.current.navigateTo("ROOM_4");
+      }
+    });
+
+    // Doorway opening click portal for Room 4 (z = -17.5)
+    // Guarantees clicking anywhere across the doorway aperture immediately triggers navigation into Room 4
+    const doorway4OpeningCollider = new THREE.Mesh(
+      new THREE.BoxGeometry(1.26, 2.30, 0.28),
+      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })
+    );
+    doorway4OpeningCollider.position.set(0, 1.15, -17.5);
+    scene.add(doorway4OpeningCollider);
+    clickablesRef.current.push({
+      mesh: doorway4OpeningCollider,
+      action: () => {
+        if (locationRef.current === "INSIDE_4") {
+          actionsRef.current.navigateTo("CORRIDOR_4");
+        } else {
+          actionsRef.current.navigateTo("ROOM_4");
+        }
+      },
     });
 
     // ============================================================
@@ -2074,16 +2118,14 @@ export default function OfficeFPV3D() {
       });
 
       const targets = validClickables.map((c) => c.mesh);
-      // Include walls to physically block clicks through solid drywall/glass partitions
-      const allMeshesToTest = [...targets, ...wallsRef.current];
+      // Include solid drywall walls to physically block clicks through walls
+      const allMeshesToTest = [...targets, ...solidWallsRef.current];
       const intersects = raycaster.intersectObjects(allMeshesToTest, true);
 
       if (intersects.length > 0) {
-        let hit = intersects[0].object;
-
         // If in LOBBY, any click in the 3D scene guides the visitor to scan their pass
         if (curLoc === "LOBBY") {
-          let temp: THREE.Object3D | null = hit;
+          let temp: THREE.Object3D | null = intersects[0].object;
           while (temp && temp !== scene) {
             const matched = validClickables.find((c) => c.mesh === temp);
             if (matched) {
@@ -2097,17 +2139,31 @@ export default function OfficeFPV3D() {
           return;
         }
 
-        // If in corridor/rooms: closest object hit by wall occludes clicks behind it
-        if (wallsRef.current.includes(hit as THREE.Mesh)) return;
+        // If in corridor or rooms: find first valid clickable along ray before any solid drywall wall
+        for (const hitInfo of intersects) {
+          let obj: THREE.Object3D | null = hitInfo.object;
 
-        while (hit && hit !== scene) {
-          const matched = validClickables.find((c) => c.mesh === hit);
-          if (matched) {
-            matched.action();
+          // Check if this object or any of its parents is a clickable target
+          let matchedClickable: { mesh: THREE.Object3D; action: () => void } | undefined;
+          let temp: THREE.Object3D | null = obj;
+          while (temp && temp !== scene) {
+            matchedClickable = validClickables.find((c) => c.mesh === temp);
+            if (matchedClickable) break;
+            temp = temp.parent;
+          }
+
+          if (matchedClickable) {
+            matchedClickable.action();
             return;
           }
-          if (hit.parent) hit = hit.parent;
-          else break;
+
+          // If an opaque solid wall is reached first, occlude clicks behind it
+          if (
+            solidWallsRef.current.includes(obj as THREE.Mesh) ||
+            solidWallsRef.current.some((w) => w === obj?.parent)
+          ) {
+            return;
+          }
         }
       } else if (curLoc === "LOBBY") {
         // Clicked into open space in lobby
