@@ -235,19 +235,66 @@ export default function OfficeFPV3D() {
       const isInLobby = curPos.z > 0.8;
       const queue: Waypoint[] = [];
 
-      // Step 1: If currently inside any room, smoothly step out into the hallway center
+      // Determine which room the visitor is currently exiting (if inside a room)
+      let exitZ = curPos.z;
+      let exitDoorKey = "";
+      let exitLookOut = new THREE.Vector3(0, 1.6, -2.5);
+
       if (isInsideRoom) {
-        const exitZ = curPos.z < -17.0 ? -16.0 : curPos.z;
+        if (curPos.z < -17.0) {
+          exitZ = -16.0;
+          exitDoorKey = "door4";
+          exitLookOut = new THREE.Vector3(0, 1.6, -14.0); // Look forward down hallway away from Room 4
+        } else if (curPos.x < -0.3) {
+          if (curPos.z > -5.0) {
+            exitZ = -2.5;
+            exitDoorKey = "door1";
+            exitLookOut = new THREE.Vector3(0, 1.6, -2.5); // Look through doorway to corridor
+          } else {
+            exitZ = -10.5;
+            exitDoorKey = "door3";
+            exitLookOut = new THREE.Vector3(0, 1.6, -10.5); // Look through doorway to corridor
+          }
+        } else if (curPos.x > 0.3) {
+          exitZ = -6.5;
+          exitDoorKey = "door2";
+          exitLookOut = new THREE.Vector3(0, 1.6, -6.5); // Look through doorway to corridor
+        }
+
+        // 1. Turn towards the room doorway and ensure door is open
+        queue.push({
+          pos: curPos.clone(),
+          look: exitLookOut,
+          duration: 350,
+          onStart: () => {
+            if (exitDoorKey) setDoorOpen(exitDoorKey, true, Math.PI / 2.15);
+          },
+          pauseAfter: 180,
+        });
+
+        // 2. Walk through the open doorway out to the corridor center
         queue.push({
           pos: new THREE.Vector3(0, 1.6, exitZ),
-          look: new THREE.Vector3(0, 1.6, exitZ - 2.0),
-          duration: 650,
+          look: exitLookOut,
+          duration: 700,
+        });
+
+        // 3. Smoothly close the room door behind you
+        queue.push({
+          pos: new THREE.Vector3(0, 1.6, exitZ),
+          look: new THREE.Vector3(
+            0,
+            1.6,
+            exitZ + (target === "LOBBY" || (target === "CORRIDOR_1" && exitZ < -2.5) ? 2.5 : -2.5)
+          ),
+          duration: 350,
           onStart: () => {
             setDoorOpen("door1", false);
             setDoorOpen("door2", false);
             setDoorOpen("door3", false);
             setDoorOpen("door4", false);
           },
+          pauseAfter: 200,
         });
       }
 
@@ -264,7 +311,8 @@ export default function OfficeFPV3D() {
         }
 
         // 1. Walk down corridor towards the entrance door threshold (z = -0.9)
-        const walkDistToDoor = Math.abs(curPos.z - (-0.9));
+        const corridorStartZ = isInsideRoom ? exitZ : curPos.z;
+        const walkDistToDoor = Math.abs(corridorStartZ - (-0.9));
         queue.push({
           pos: new THREE.Vector3(0, 1.6, -0.9),
           look: new THREE.Vector3(0, 1.6, 2.5),
@@ -344,7 +392,7 @@ export default function OfficeFPV3D() {
               : new THREE.Vector3(0, 1.6, -17.5);
 
       // Step 2: Walk along corridor center to target Z
-      const startZ = isInLobby ? 0 : curPos.z;
+      const startZ = isInLobby ? 0 : isInsideRoom ? exitZ : curPos.z;
       const walkDistance = Math.abs(startZ - targetCorridorZ);
       if (walkDistance > 0.4 || isInLobby) {
         queue.push({
