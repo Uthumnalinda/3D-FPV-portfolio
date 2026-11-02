@@ -321,12 +321,12 @@ export default function OfficeFPV3D() {
       const targetCorridorZ = roomKey
         ? ROOM_CONFIG[roomKey].corridorZ
         : target === "CORRIDOR_1"
-        ? -2.5
-        : target === "CORRIDOR_2"
-        ? -6.5
-        : target === "CORRIDOR_3"
-        ? -10.5
-        : -16.0;
+          ? -2.5
+          : target === "CORRIDOR_2"
+            ? -6.5
+            : target === "CORRIDOR_3"
+              ? -10.5
+              : -16.0;
 
       const targetCorridorLoc: LocationState = roomKey
         ? ROOM_CONFIG[roomKey].corridorLoc
@@ -335,12 +335,12 @@ export default function OfficeFPV3D() {
       const targetLook = roomKey
         ? ROOM_CONFIG[roomKey].corridorLook
         : target === "CORRIDOR_1"
-        ? new THREE.Vector3(-2.4, 1.6, -2.5)
-        : target === "CORRIDOR_2"
-        ? new THREE.Vector3(2.4, 1.6, -6.5)
-        : target === "CORRIDOR_3"
-        ? new THREE.Vector3(-2.4, 1.6, -10.5)
-        : new THREE.Vector3(0, 1.6, -17.5);
+          ? new THREE.Vector3(-2.4, 1.6, -2.5)
+          : target === "CORRIDOR_2"
+            ? new THREE.Vector3(2.4, 1.6, -6.5)
+            : target === "CORRIDOR_3"
+              ? new THREE.Vector3(-2.4, 1.6, -10.5)
+              : new THREE.Vector3(0, 1.6, -17.5);
 
       // Step 2: Walk along corridor center to target Z
       const startZ = isInLobby ? 0 : curPos.z;
@@ -1755,7 +1755,7 @@ export default function OfficeFPV3D() {
     });
 
     // 2. Door 1 (Hinged at left jamb x = -1.2, z = -1.93, baseY = Math.PI / 2)
-    create3DDoor("door1", [-1.2, 0, -1.93], Math.PI / 2, "01 // ABOUT ME", "PROFILE ELEVATION", () => {
+    create3DDoor("door1", [-1.2, 0, -1.93], Math.PI / 2, "ABOUT ME", "DEVELOPER PROFILE", () => {
       actionsRef.current.navigateTo("ROOM_1");
     });
 
@@ -2301,11 +2301,10 @@ export default function OfficeFPV3D() {
           <button
             onClick={() => handleHeaderNav("LOBBY")}
             disabled={isWalking}
-            className={`px-3 py-1.5 rounded transition-all border ${
-              location === "LOBBY"
-                ? "bg-stone-900 text-stone-100 font-bold border-stone-900 shadow-sm"
-                : "text-stone-700 hover:text-stone-900 border-transparent hover:border-stone-400"
-            } ${isWalking ? "cursor-wait opacity-60" : "cursor-pointer"}`}
+            className={`px-3 py-1.5 rounded transition-all border ${location === "LOBBY"
+              ? "bg-stone-900 text-stone-100 font-bold border-stone-900 shadow-sm"
+              : "text-stone-700 hover:text-stone-900 border-transparent hover:border-stone-400"
+              } ${isWalking ? "cursor-wait opacity-60" : "cursor-pointer"}`}
           >
             LOBBY
           </button>
@@ -2323,13 +2322,12 @@ export default function OfficeFPV3D() {
                 onClick={() => handleHeaderNav(id)}
                 disabled={isWalking}
                 title={isLocked ? "Scan visitor pass at the door to unlock" : undefined}
-                className={`px-3 py-1.5 rounded transition-all border flex items-center gap-1.5 ${
-                  isActive
-                    ? "bg-stone-900 text-stone-100 font-bold border-stone-900 shadow-sm"
-                    : isLocked
+                className={`px-3 py-1.5 rounded transition-all border flex items-center gap-1.5 ${isActive
+                  ? "bg-stone-900 text-stone-100 font-bold border-stone-900 shadow-sm"
+                  : isLocked
                     ? "text-stone-400 border-transparent hover:border-stone-400 hover:text-stone-600 cursor-pointer"
                     : "text-stone-700 hover:text-stone-900 border-transparent hover:border-stone-400 cursor-pointer"
-                } ${isWalking ? "cursor-wait opacity-60" : ""}`}
+                  } ${isWalking ? "cursor-wait opacity-60" : ""}`}
               >
                 <span>{label}</span>
                 {isLocked && (
@@ -2646,16 +2644,14 @@ export default function OfficeFPV3D() {
           style={{
             left: shelfScreenPos ? `${shelfScreenPos.x}px` : "22%",
             top: shelfScreenPos ? `${shelfScreenPos.y + 14}px` : "79%",
-            transform: `translate(calc(-50% + ${cardOffset.x}px), calc(-50% + ${cardOffset.y}px)) ${
-              isDraggingCard
-                ? "rotate(4deg) scale(1.1)"
-                : "perspective(500px) rotateX(52deg) rotateZ(-3deg)"
-            }`,
+            transform: `translate(calc(-50% + ${cardOffset.x}px), calc(-50% + ${cardOffset.y}px)) ${isDraggingCard
+              ? "rotate(4deg) scale(1.1)"
+              : "perspective(500px) rotateX(52deg) rotateZ(-3deg)"
+              }`,
             transformOrigin: "center center",
           }}
-          className={`fixed z-40 transition-transform ${
-            isDraggingCard ? "cursor-grabbing duration-0 drop-shadow-2xl" : "cursor-grab duration-300 hover:rotate-x-[36deg] hover:scale-105"
-          } select-none touch-none`}
+          className={`fixed z-40 transition-transform ${isDraggingCard ? "cursor-grabbing duration-0 drop-shadow-2xl" : "cursor-grab duration-300 hover:rotate-x-[36deg] hover:scale-105"
+            } select-none touch-none`}
           onMouseDown={handleDragStart}
           onTouchStart={handleDragStart}
           onClick={() => {
@@ -2666,17 +2662,15 @@ export default function OfficeFPV3D() {
         >
           {/* Authentic Physical Corporate Plastic RFID Visitor Badge */}
           <div
-            className={`w-28 h-18 rounded border text-stone-900 p-1.5 relative select-none transition-all ${
-              isDraggingCard
-                ? "shadow-2xl"
-                : "shadow-[0_8px_14px_-2px_rgba(0,0,0,0.7),0_2px_4px_rgba(0,0,0,0.4)]"
-            } ${
-              nfcAccessGranted
+            className={`w-28 h-18 rounded border text-stone-900 p-1.5 relative select-none transition-all ${isDraggingCard
+              ? "shadow-2xl"
+              : "shadow-[0_8px_14px_-2px_rgba(0,0,0,0.7),0_2px_4px_rgba(0,0,0,0.4)]"
+              } ${nfcAccessGranted
                 ? "bg-emerald-100 border-emerald-600 shadow-emerald-500/50"
                 : cardHintDenied
-                ? "bg-rose-100 border-rose-600 animate-bounce"
-                : "bg-[#fcfbf9] border-stone-300 hover:border-stone-500"
-            }`}
+                  ? "bg-rose-100 border-rose-600 animate-bounce"
+                  : "bg-[#fcfbf9] border-stone-300 hover:border-stone-500"
+              }`}
           >
             {/* Lanyard Clip Slot */}
             <div className="w-5 h-0.5 mx-auto bg-stone-300 border border-stone-400 rounded-full mb-1" />
@@ -2739,23 +2733,22 @@ export default function OfficeFPV3D() {
             else if (location === "CORRIDOR_4") navigateTo("CORRIDOR_3");
           }}
           disabled={location === "LOBBY" || isWalking}
-          className={`px-4 py-2 border-2 border-stone-800 rounded transition-all font-semibold ${
-            location === "LOBBY" || isWalking
-              ? "opacity-30 cursor-not-allowed"
-              : "hover:bg-stone-900 hover:text-stone-100 cursor-pointer"
-          }`}
+          className={`px-4 py-2 border-2 border-stone-800 rounded transition-all font-semibold ${location === "LOBBY" || isWalking
+            ? "opacity-30 cursor-not-allowed"
+            : "hover:bg-stone-900 hover:text-stone-100 cursor-pointer"
+            }`}
         >
           {location.startsWith("INSIDE_")
             ? "← STEP OUT TO HALLWAY"
             : location === "CORRIDOR_1"
-            ? "← RETURN TO LOBBY"
-            : location === "CORRIDOR_2"
-            ? "← BACK TO DOOR 01"
-            : location === "CORRIDOR_3"
-            ? "← BACK TO DOOR 02"
-            : location === "CORRIDOR_4"
-            ? "← BACK TO DOOR 03"
-            : "LOBBY ENTRANCE"}
+              ? "← RETURN TO LOBBY"
+              : location === "CORRIDOR_2"
+                ? "← BACK TO DOOR 01"
+                : location === "CORRIDOR_3"
+                  ? "← BACK TO DOOR 02"
+                  : location === "CORRIDOR_4"
+                    ? "← BACK TO DOOR 03"
+                    : "LOBBY ENTRANCE"}
         </button>
 
         {/* Current Location Indicator */}
@@ -2764,37 +2757,37 @@ export default function OfficeFPV3D() {
             {location === "LOBBY"
               ? "Entrance Lobby"
               : location === "CORRIDOR_1"
-              ? "Hallway • Room 01"
-              : location === "INSIDE_1"
-              ? "Room 01: About Me"
-              : location === "CORRIDOR_2"
-              ? "Hallway • Room 02"
-              : location === "INSIDE_2"
-              ? "Room 02: Projects"
-              : location === "CORRIDOR_3"
-              ? "Hallway • Room 03"
-              : location === "INSIDE_3"
-              ? "Room 03: Tech Stack"
-              : location === "CORRIDOR_4"
-              ? "Hallway • Room 04"
-              : "Room 04: Contact"}
+                ? "Hallway • Room 01"
+                : location === "INSIDE_1"
+                  ? "Room 01: About Me"
+                  : location === "CORRIDOR_2"
+                    ? "Hallway • Room 02"
+                    : location === "INSIDE_2"
+                      ? "Room 02: Projects"
+                      : location === "CORRIDOR_3"
+                        ? "Hallway • Room 03"
+                        : location === "INSIDE_3"
+                          ? "Room 03: Tech Stack"
+                          : location === "CORRIDOR_4"
+                            ? "Hallway • Room 04"
+                            : "Room 04: Contact"}
           </div>
           <div className="text-[10px] text-stone-600 mt-0.5">
             {isWalking
               ? "Walking inside..."
               : location === "LOBBY"
-              ? cardHintDenied
-                ? "Door locked. Scan your pass to enter."
-                : "Scan your pass to enter."
-              : location.startsWith("INSIDE_1")
-              ? "Click the board to view."
-              : location.startsWith("INSIDE_2")
-              ? "Click any project to view."
-              : location.startsWith("INSIDE_3")
-              ? "Click wall to view tools."
-              : location.startsWith("INSIDE_4")
-              ? "Click desk to send a message."
-              : "Click any door to enter."}
+                ? cardHintDenied
+                  ? "Door locked. Scan your pass to enter."
+                  : "Scan your pass to enter."
+                : location.startsWith("INSIDE_1")
+                  ? "Click the board to view."
+                  : location.startsWith("INSIDE_2")
+                    ? "Click any project to view."
+                    : location.startsWith("INSIDE_3")
+                      ? "Click wall to view tools."
+                      : location.startsWith("INSIDE_4")
+                        ? "Click desk to send a message."
+                        : "Click door to enter."}
           </div>
         </div>
 
@@ -2804,21 +2797,20 @@ export default function OfficeFPV3D() {
             <button
               onClick={showDeniedHint}
               disabled={isWalking || nfcAccessGranted}
-              className={`px-5 py-2 border-2 border-stone-800 font-bold transition-all ${
-                nfcAccessGranted
-                  ? "bg-emerald-600 text-white border-emerald-500 shadow-sm"
-                  : cardHintDenied
+              className={`px-5 py-2 border-2 border-stone-800 font-bold transition-all ${nfcAccessGranted
+                ? "bg-emerald-600 text-white border-emerald-500 shadow-sm"
+                : cardHintDenied
                   ? "bg-rose-900 text-rose-100 border-rose-600 animate-pulse cursor-pointer"
                   : "bg-stone-900 text-stone-300 hover:bg-stone-800 cursor-pointer shadow-sm"
-              }`}
+                }`}
             >
               {isWalking
                 ? "Entering Office..."
                 : nfcAccessGranted
-                ? "Access Granted — Welcome"
-                : cardHintDenied
-                ? "Please drag your pass to the scanner"
-                : "Door Locked — Scan Pass"}
+                  ? "Access Granted — Welcome"
+                  : cardHintDenied
+                    ? "Please drag your pass to the scanner"
+                    : "Door Locked — Scan Pass"}
             </button>
           )}
 
@@ -2827,18 +2819,16 @@ export default function OfficeFPV3D() {
               <button
                 onClick={() => navigateTo("ROOM_1")}
                 disabled={isWalking}
-                className={`px-4 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${
-                  isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
-                }`}
+                className={`px-4 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
+                  }`}
               >
                 ENTER ROOM 01 ↗
               </button>
               <button
                 onClick={() => navigateTo("CORRIDOR_2")}
                 disabled={isWalking}
-                className={`px-4 py-2 border-2 border-stone-800 hover:bg-stone-900 hover:text-stone-100 font-semibold transition-all ${
-                  isWalking ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
-                }`}
+                className={`px-4 py-2 border-2 border-stone-800 hover:bg-stone-900 hover:text-stone-100 font-semibold transition-all ${isWalking ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
+                  }`}
               >
                 WALK DOWN HALLWAY →
               </button>
@@ -2850,18 +2840,16 @@ export default function OfficeFPV3D() {
               <button
                 onClick={() => navigateTo("ROOM_2")}
                 disabled={isWalking}
-                className={`px-4 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${
-                  isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
-                }`}
+                className={`px-4 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
+                  }`}
               >
                 ENTER ROOM 02 ↗
               </button>
               <button
                 onClick={() => navigateTo("CORRIDOR_3")}
                 disabled={isWalking}
-                className={`px-4 py-2 border-2 border-stone-800 hover:bg-stone-900 hover:text-stone-100 font-semibold transition-all ${
-                  isWalking ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
-                }`}
+                className={`px-4 py-2 border-2 border-stone-800 hover:bg-stone-900 hover:text-stone-100 font-semibold transition-all ${isWalking ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
+                  }`}
               >
                 WALK DOWN HALLWAY →
               </button>
@@ -2873,18 +2861,16 @@ export default function OfficeFPV3D() {
               <button
                 onClick={() => navigateTo("ROOM_3")}
                 disabled={isWalking}
-                className={`px-4 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${
-                  isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
-                }`}
+                className={`px-4 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
+                  }`}
               >
                 ENTER ROOM 03 ↗
               </button>
               <button
                 onClick={() => navigateTo("CORRIDOR_4")}
                 disabled={isWalking}
-                className={`px-4 py-2 border-2 border-stone-800 hover:bg-stone-900 hover:text-stone-100 font-semibold transition-all ${
-                  isWalking ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
-                }`}
+                className={`px-4 py-2 border-2 border-stone-800 hover:bg-stone-900 hover:text-stone-100 font-semibold transition-all ${isWalking ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
+                  }`}
               >
                 WALK TO CONTACT DESK →
               </button>
@@ -2896,18 +2882,16 @@ export default function OfficeFPV3D() {
               <button
                 onClick={() => navigateTo("ROOM_4")}
                 disabled={isWalking}
-                className={`px-4 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${
-                  isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
-                }`}
+                className={`px-4 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
+                  }`}
               >
                 ENTER ROOM 04 ↗
               </button>
               <button
                 onClick={() => navigateTo("LOBBY")}
                 disabled={isWalking}
-                className={`px-4 py-2 border-2 border-stone-800 hover:bg-stone-900 hover:text-stone-100 font-semibold transition-all ${
-                  isWalking ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
-                }`}
+                className={`px-4 py-2 border-2 border-stone-800 hover:bg-stone-900 hover:text-stone-100 font-semibold transition-all ${isWalking ? "opacity-30 cursor-not-allowed" : "cursor-pointer"
+                  }`}
               >
                 RETURN TO LOBBY ↺
               </button>
@@ -2918,9 +2902,8 @@ export default function OfficeFPV3D() {
             <button
               onClick={() => navigateTo("ROOM_2")}
               disabled={isWalking}
-              className={`px-5 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${
-                isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
-              }`}
+              className={`px-5 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
+                }`}
             >
               EXIT & NEXT ROOM (PROJECTS) →
             </button>
@@ -2930,9 +2913,8 @@ export default function OfficeFPV3D() {
             <button
               onClick={() => navigateTo("ROOM_3")}
               disabled={isWalking}
-              className={`px-5 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${
-                isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
-              }`}
+              className={`px-5 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
+                }`}
             >
               EXIT & NEXT ROOM (STACK) →
             </button>
@@ -2942,9 +2924,8 @@ export default function OfficeFPV3D() {
             <button
               onClick={() => navigateTo("ROOM_4")}
               disabled={isWalking}
-              className={`px-5 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${
-                isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
-              }`}
+              className={`px-5 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
+                }`}
             >
               EXIT & NEXT ROOM (CONTACT) →
             </button>
@@ -2954,9 +2935,8 @@ export default function OfficeFPV3D() {
             <button
               onClick={() => navigateTo("LOBBY")}
               disabled={isWalking}
-              className={`px-5 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${
-                isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
-              }`}
+              className={`px-5 py-2 bg-stone-900 text-stone-100 border-2 border-stone-800 font-bold transition-all ${isWalking ? "opacity-30 cursor-not-allowed" : "hover:bg-orange-600 cursor-pointer shadow-sm"
+                }`}
             >
               RETURN TO ENTRANCE LOBBY ↺
             </button>
